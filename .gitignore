@@ -1,0 +1,16 @@
+# Environment variables - NEVER upload API keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database file (each deployment creates its own)
+bota.db
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

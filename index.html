@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bota — SmileCare Dental Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #b2ede0;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(100,220,190,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(60,180,160,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 60% 10%, rgba(180,240,220,0.4) 0%, transparent 50%);
+    padding: 16px;
+  }
+
+  /* ── DESKTOP: centered card ── */
+  .chat-wrapper {
+    width: min(420px, 100%);
+    height: min(720px, 90vh);
+    height: min(720px, 90dvh);
+    display: flex;
+    flex-direction: column;
+    border-radius: 32px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1.5px solid rgba(255,255,255,0.55);
+    box-shadow:
+      0 8px 40px rgba(0,160,120,0.18),
+      0 1.5px 0 rgba(255,255,255,0.7) inset;
+    animation: floatIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  /* ── MOBILE: full screen ── */
+  @media (max-width: 480px) {
+    body {
+      padding: 0;
+      align-items: stretch;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(100,220,190,0.5) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(60,180,160,0.4) 0%, transparent 60%);
+    }
+    .chat-wrapper {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
+
+  /* ── TABLET: comfortable card ── */
+  @media (min-width: 481px) and (max-width: 768px) {
+    body { padding: 12px; }
+    .chat-wrapper {
+      width: min(460px, 96%);
+      height: min(680px, 92vh);
+      height: min(680px, 92dvh);
+      border-radius: 28px;
+    }
+  }
+
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* HEADER */
+  .header {
+    padding: 20px 22px 16px;
+    background: rgba(255,255,255,0.22);
+    border-bottom: 1px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    flex-shrink: 0;
+  }
+
+  .header-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 2px solid rgba(255,255,255,0.7);
+    box-shadow: 0 4px 14px rgba(0,160,120,0.25);
+    flex-shrink: 0;
+  }
+
+  .header-info { flex: 1; }
+
+  .header-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0a5c48;
+    letter-spacing: 0.2px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: #2a9d7e;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 400;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c78a;
+    box-shadow: 0 0 0 2px rgba(34,199,138,0.25);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+  }
+
+  .header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
+    color: #0a5c48;
+  }
+  .header-btn:hover { background: rgba(255,255,255,0.6); }
+
+  /* CHAT BODY */
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-body::-webkit-scrollbar { width: 0; }
+
+  /* DATE DIVIDER */
+  .date-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 2px 0 6px;
+  }
+  .date-divider span {
+    font-size: 11px;
+    color: rgba(10,92,72,0.5);
+    white-space: nowrap;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .date-divider::before, .date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  /* MESSAGE ROWS */
+  .msg-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 9px;
+    animation: msgIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-row.user { flex-direction: row-reverse; }
+
+  /* BUBBLE ICONS */
+  .bubble-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.7);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .bubble-icon.bot-icon {
+    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+  }
+
+  .bubble-icon.user-icon {
+    background: linear-gradient(135deg, #5be8c8, #2ec4a0);
+  }
+
+  /* BUBBLES */
+  .bubble {
+    max-width: 76%;
+    padding: 13px 16px;
+    border-radius: 22px;
+    font-size: 14px;
+    line-height: 1.55;
+    font-weight: 400;
+    position: relative;
+    word-break: break-word;
+  }
+
+  @media (max-width: 480px) {
+    .bubble { font-size: 13.5px; padding: 11px 14px; }
+    .bubble-icon { width: 28px; height: 28px; font-size: 13px; }
+    .msg-row { gap: 7px; }
+    .chat-body { padding: 16px 14px; gap: 12px; }
+    .header { padding: 16px 16px 13px; }
+    .header-name { font-size: 15px; }
+    .chip { font-size: 12.5px; padding: 10px 14px; }
+    .input-area { padding: 12px 12px 16px; gap: 8px; }
+    .input-wrap input { font-size: 13.5px; }
+    .send-btn { width: 40px; height: 40px; }
+    .bc-row { font-size: 12px; }
+    .bc-label { font-size: 11px; width: 52px; }
+  }
+
+  .bubble.bot {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.75);
+    border-bottom-left-radius: 6px;
+    color: #0a4a3a;
+    box-shadow: 0 4px 16px rgba(0,120,90,0.08), 0 1px 0 rgba(255,255,255,0.8) inset;
+  }
+
+  .bubble.bot.has-chips {
+    max-width: 92%;
+    width: 92%;
+  }
+
+  .bubble.user {
+    background: linear-gradient(135deg, rgba(61,217,179,0.75), rgba(26,171,138,0.85));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-bottom-right-radius: 6px;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0,160,120,0.22), 0 1px 0 rgba(255,255,255,0.3) inset;
+    font-weight: 500;
+  }
+
+  /* BOOKING CONFIRMATION CARD */
+  .booking-card {
+    margin-top: 10px;
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255,255,255,0.7);
+    border-radius: 16px;
+    padding: 13px 15px;
+    font-size: 13px;
+  }
+
+  .bc-title {
+    font-weight: 600;
+    color: #0a7a5e;
+    font-size: 13.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0a4a3a;
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+  }
+  .bc-row:last-child { border-bottom: none; }
+  .bc-row .bc-icon { font-size: 15px; width: 20px; flex-shrink: 0; }
+  .bc-row .bc-label { color: #2a9d7e; font-size: 11.5px; width: 60px; flex-shrink: 0; }
+  .bc-row .bc-val { font-weight: 500; }
+
+  /* CONFIRMATION BUTTONS */
+  .confirm-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .confirm-btn {
+    flex: 1;
+    padding: 9px 0;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .confirm-btn.yes {
+    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,160,120,0.25);
+  }
+
+  .confirm-btn.no {
+    background: rgba(255,255,255,0.5);
+    color: #0a5c48;
+    border: 1.5px solid rgba(255,255,255,0.7);
+  }
+
+  .confirm-btn:hover { transform: translateY(-1px); }
+  .confirm-btn:active { transform: scale(0.97); }
+
+  /* QUICK REPLY CHIPS */
+  .quick-replies {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .chip {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.5);
+    border: 1.5px solid rgba(255,255,255,0.7);
+    color: #0a7a5e;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    backdrop-filter: blur(8px);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chip::after {
+    content: '→';
+    font-size: 14px;
+    opacity: 0.5;
+  }
+
+  .chip:hover {
+    background: rgba(255,255,255,0.8);
+    transform: translateX(3px);
+    box-shadow: 0 4px 12px rgba(0,120,90,0.12);
+    border-color: rgba(61,217,179,0.4);
+  }
+
+  /* TYPING INDICATOR */
+  .typing-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 9px;
+  }
+
+  .typing-bubble {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.75);
+    border-radius: 22px;
+    border-bottom-left-radius: 6px;
+    padding: 13px 18px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .typing-bubble span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2ec4a0;
+    animation: typeBounce 1.2s infinite;
+  }
+  .typing-bubble span:nth-child(2) { animation-delay: 0.18s; }
+  .typing-bubble span:nth-child(3) { animation-delay: 0.36s; }
+
+  @keyframes typeBounce {
+    0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* INPUT AREA */
+  .input-area {
+    padding: 14px 16px 18px;
+    background: rgba(255,255,255,0.2);
+    border-top: 1px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    /* safe area for notched phones */
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  .input-wrap {
+    flex: 1;
+    background: rgba(255,255,255,0.5);
+    border: 1.5px solid rgba(255,255,255,0.75);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: rgba(61,217,179,0.6);
+    box-shadow: 0 0 0 3px rgba(61,217,179,0.12);
+    background: rgba(255,255,255,0.65);
+  }
+
+  .input-wrap input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #0a4a3a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: max(16px, 14px); /* min 16px prevents iOS zoom on focus */
+    padding: 13px 0;
+  }
+
+  .input-wrap input::placeholder { color: rgba(10,74,58,0.4); }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(0,160,120,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+
+  .send-btn:hover { transform: scale(1.07); box-shadow: 0 6px 20px rgba(0,160,120,0.4); }
+  .send-btn:active { transform: scale(0.95); }
+
+  .send-btn svg { width: 18px; height: 18px; fill: white; }
+
+  /* POWERED BY */
+  .powered {
+    text-align: center;
+    font-size: 10.5px;
+    color: rgba(10,92,72,0.45);
+    padding: 0 0 4px;
+    background: rgba(255,255,255,0.2);
+    letter-spacing: 0.3px;
+  }
+
+  /* ERROR BUBBLE */
+  .bubble.error {
+    background: rgba(255,100,100,0.12);
+    border-color: rgba(255,100,100,0.25);
+    color: #a33;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-avatar">🦷</div>
+    <div class="header-info">
+      <div class="header-name">Bota</div>
+      <div class="header-sub">
+        <span class="status-dot"></span>
+        SmileCare Dental • Online now
+      </div>
+    </div>
+    <div class="header-btn" onclick="viewAppointments()" title="View appointments">📋</div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-body" id="chatBody">
+    <div class="date-divider"><span>TODAY</span></div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <div class="input-wrap">
+      <input
+        type="text"
+        id="msgInput"
+        placeholder="Ask me anything..."
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') sendMessage()"
+      />
+    </div>
+    <button class="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2 21L23 12 2 3v7l15 2-15 2v7z"/></svg>
+    </button>
+  </div>
+
+  <div class="powered">Powered by Bota AI ✦ SmileCare Dental Clinic</div>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+let conversationHistory = [];
+
+// ── BOOKING FLOW STATE ──
+// step: null = no booking in progress
+// "name" → "age" → "date" → "time" → "confirm"
+let bookingFlow = {
+  active: false,
+  step: null,
+  data: { name: "", age: "", date: "", time: "", service: "General Consultation" }
+};
+
+function resetBookingFlow() {
+  bookingFlow = {
+    active: false,
+    step: null,
+    data: { name: "", age: "", date: "", time: "", service: "General Consultation" }
+  };
+}
+
+// ── UTILS ──
+function esc(t) {
+  return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function scrollBottom() {
+  const cb = document.getElementById("chatBody");
+  cb.scrollTop = cb.scrollHeight;
+}
+
+// ── ADD USER BUBBLE ──
+function addUserBubble(text) {
+  const cb = document.getElementById("chatBody");
+  const row = document.createElement("div");
+  row.className = "msg-row user";
+  row.innerHTML = `
+    <div class="bubble user">${esc(text)}</div>
+    <div class="bubble-icon user-icon">👤</div>
+  `;
+  cb.appendChild(row);
+  scrollBottom();
+}
+
+// ── ADD BOT BUBBLE ──
+function addBotBubble(html, chips) {
+  const cb = document.getElementById("chatBody");
+  const row = document.createElement("div");
+  row.className = "msg-row";
+
+  let chipsHtml = "";
+  if (chips && chips.length) {
+    chipsHtml = `<div class="quick-replies">${chips.map(c=>`<span class="chip" onclick="quickReply('${esc(c)}')">${esc(c)}</span>`).join("")}</div>`;
+  }
+
+  const bubbleClass = (chips && chips.length) ? "bubble bot has-chips" : "bubble bot";
+  row.innerHTML = `
+    <div class="bubble-icon bot-icon">🦷</div>
+    <div class="${bubbleClass}">${html}${chipsHtml}</div>
+  `;
+  cb.appendChild(row);
+  scrollBottom();
+}
+
+// ── SHOW CONFIRMATION CARD ──
+function showConfirmCard() {
+  const d = bookingFlow.data;
+  const cb = document.getElementById("chatBody");
+  const row = document.createElement("div");
+  row.className = "msg-row";
+  row.innerHTML = `
+    <div class="bubble-icon bot-icon">🦷</div>
+    <div class="bubble bot has-chips">
+      Please confirm your appointment details 😊
+      <div class="booking-card">
+        <div class="bc-title">🗓 Appointment Summary</div>
+        <div class="bc-row"><span class="bc-icon">👤</span><span class="bc-label">Name</span><span class="bc-val">${esc(d.name)}</span></div>
+        <div class="bc-row"><span class="bc-icon">🎂</span><span class="bc-label">Age</span><span class="bc-val">${esc(d.age)} years</span></div>
+        <div class="bc-row"><span class="bc-icon">📅</span><span class="bc-label">Date</span><span class="bc-val">${esc(d.date)}</span></div>
+        <div class="bc-row"><span class="bc-icon">⏰</span><span class="bc-label">Time</span><span class="bc-val">${esc(d.time)}</span></div>
+        <div class="bc-row"><span class="bc-icon">🦷</span><span class="bc-label">Service</span><span class="bc-val">${esc(d.service)}</span></div>
+        <div class="confirm-btns">
+          <button class="confirm-btn yes" onclick="confirmBooking()">✓ Yes, confirm</button>
+          <button class="confirm-btn no" onclick="cancelBooking()">✗ Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  cb.appendChild(row);
+  scrollBottom();
+}
+
+// ── CONFIRMED CARD ──
+function addConfirmedCard(appt) {
+  const cb = document.getElementById("chatBody");
+  const row = document.createElement("div");
+  row.className = "msg-row";
+  row.innerHTML = `
+    <div class="bubble-icon bot-icon">🦷</div>
+    <div class="bubble bot has-chips">
+      Your appointment is all set! See you soon 😊
+      <div class="booking-card">
+        <div class="bc-title" style="color:#0a7a5e;">✅ Appointment Confirmed</div>
+        <div class="bc-row"><span class="bc-icon">👤</span><span class="bc-label">Name</span><span class="bc-val">${esc(appt.name)}</span></div>
+        <div class="bc-row"><span class="bc-icon">🎂</span><span class="bc-label">Age</span><span class="bc-val">${esc(appt.age || '-')} years</span></div>
+        <div class="bc-row"><span class="bc-icon">📅</span><span class="bc-label">Date</span><span class="bc-val">${esc(appt.date)}</span></div>
+        <div class="bc-row"><span class="bc-icon">⏰</span><span class="bc-label">Time</span><span class="bc-val">${esc(appt.time)}</span></div>
+        <div class="bc-row"><span class="bc-icon">🦷</span><span class="bc-label">Service</span><span class="bc-val">${esc(appt.service || 'General Consultation')}</span></div>
+        <div class="bc-row"><span class="bc-icon">🆔</span><span class="bc-label">Booking</span><span class="bc-val">#${appt.id}</span></div>
+      </div>
+    </div>
+  `;
+  cb.appendChild(row);
+  scrollBottom();
+}
+
+// ── ERROR BUBBLE ──
+function addErrorBubble(text) {
+  const cb = document.getElementById("chatBody");
+  const row = document.createElement("div");
+  row.className = "msg-row";
+  row.innerHTML = `
+    <div class="bubble-icon bot-icon">🦷</div>
+    <div class="bubble error">${esc(text)}</div>
+  `;
+  cb.appendChild(row);
+  scrollBottom();
+}
+
+// ── TYPING ──
+function showTyping() {
+  const cb = document.getElementById("chatBody");
+  const el = document.createElement("div");
+  el.className = "typing-row";
+  el.id = "typingEl";
+  el.innerHTML = `
+    <div class="bubble-icon bot-icon">🦷</div>
+    <div class="typing-bubble"><span></span><span></span><span></span></div>
+  `;
+  cb.appendChild(el);
+  scrollBottom();
+}
+
+function hideTyping() {
+  const el = document.getElementById("typingEl");
+  if (el) el.remove();
+}
+
+// ── QUICK REPLY ──
+function quickReply(text) {
+  // Handle services and timings directly — no need to call AI
+  if (text === "Our services") {
+    addUserBubble(text);
+    showServices();
+    return;
+  }
+  if (text === "Clinic timings") {
+    addUserBubble(text);
+    showTimings();
+    return;
+  }
+  if (text === "Book an appointment") {
+    addUserBubble(text);
+    startBookingFlow();
+    return;
+  }
+  document.getElementById("msgInput").value = text;
+  sendMessage();
+}
+
+// ── SHOW SERVICES ──
+function showServices() {
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addBotBubble(
+      `Here are our dental services 🦷<br><br>` +
+      `<div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">🧼&nbsp; Teeth Cleaning</div>` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">🦷&nbsp; Dental Fillings</div>` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">😁&nbsp; Teeth Alignment</div>` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">🔬&nbsp; Root Canal Treatment</div>` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">🪥&nbsp; Tooth Extraction</div>` +
+      `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.4);padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#0a4a3a;">✨&nbsp; Teeth Whitening</div>` +
+      `</div>`
+    );
+    setTimeout(() => {
+      addBotBubble("Would you like to book an appointment for any of these services? 😊", ["Book an appointment"]);
+    }, 800);
+  }, 700);
+}
+
+// ── SHOW TIMINGS ──
+function showTimings() {
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addBotBubble(
+      `Here are our clinic timings 🕐<br><br>` +
+      `<div style="background:rgba(255,255,255,0.4);border-radius:12px;padding:12px 14px;margin-top:4px;">` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.5);font-size:13px;">` +
+      `<span style="color:#2a9d7e;font-weight:500;">📅 Monday – Saturday</span>` +
+      `<span style="font-weight:600;color:#0a4a3a;">10 AM – 7 PM</span>` +
+      `</div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">` +
+      `<span style="color:#2a9d7e;font-weight:500;">📅 Sunday</span>` +
+      `<span style="font-weight:600;color:#c0392b;">Closed</span>` +
+      `</div>` +
+      `</div>`
+    );
+    setTimeout(() => {
+      addBotBubble("Would you like to book an appointment? 😊", ["Book an appointment"]);
+    }, 800);
+  }, 700);
+}
+
+// ── START BOOKING FLOW ──
+function startBookingFlow() {
+  resetBookingFlow();
+  bookingFlow.active = true;
+  bookingFlow.step = "name";
+  setTimeout(() => {
+    addBotBubble("Great! Let's get you booked 😊<br>First, may I know your <strong>full name</strong>?");
+  }, 300);
+}
+
+// ── HANDLE BOOKING STEPS ──
+// What question to repeat for each step
+function getCurrentStepQuestion() {
+  const step = bookingFlow.step;
+  if (step === "name") return "Could you please share your <strong>full name</strong>? 😊";
+  if (step === "age")  return "Could you please share your <strong>age</strong>? 😊";
+  if (step === "date") return "What <strong>date</strong> would you prefer?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. tomorrow, 15th June</span>";
+  if (step === "time") return "What <strong>time</strong> works best for you?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. 10 AM, 2:30 PM</span>";
+  return "";
+}
+
+// Detect if user typed something off-topic during booking
+function isOffTopic(input) {
+  const t = input.toLowerCase();
+  const offTopicKeywords = [
+    "timing", "timings", "open", "close", "service", "services",
+    "hello", "hi", "hey", "what", "how", "where", "why", "who",
+    "cancel", "stop", "exit", "quit", "nevermind", "forget"
+  ];
+  return offTopicKeywords.some(k => t.includes(k));
+}
+
+// Handle cancel/stop intent during booking
+function isCancelIntent(input) {
+  const t = input.toLowerCase();
+  return ["cancel", "stop", "exit", "quit", "nevermind", "forget it", "no thanks"].some(k => t.includes(k));
+}
+
+function handleBookingStep(userInput) {
+  const step = bookingFlow.step;
+  const d = bookingFlow.data;
+  const trimmed = userInput.trim();
+
+  showTyping();
+
+  setTimeout(() => {
+    hideTyping();
+
+    // ── CANCEL INTENT ──
+    if (isCancelIntent(trimmed)) {
+      resetBookingFlow();
+      addBotBubble("No problem! Your booking has been cancelled. 😊<br>Feel free to ask me anything else.",
+        ["Book an appointment", "Our services", "Clinic timings"]);
+      return;
+    }
+
+    // ── TIMINGS QUESTION DURING BOOKING ──
+    if (trimmed.toLowerCase().includes("timing") || trimmed.toLowerCase().includes("open") || trimmed.toLowerCase().includes("close")) {
+      addBotBubble(
+        `Our clinic is open <strong>Monday to Saturday, 10 AM – 7 PM</strong>. We are closed on Sundays. 😊<br><br>` +
+        `Now, let's continue with your booking — ` + getCurrentStepQuestion()
+      );
+      return;
+    }
+
+    // ── SERVICES QUESTION DURING BOOKING ──
+    if (trimmed.toLowerCase().includes("service") || trimmed.toLowerCase().includes("treatment")) {
+      addBotBubble(
+        `We offer: Teeth Cleaning, Dental Fillings, Teeth Alignment, Root Canal Treatment, Tooth Extraction, and Teeth Whitening. 😊<br><br>` +
+        `Now, let's continue with your booking — ` + getCurrentStepQuestion()
+      );
+      return;
+    }
+
+    // ── STEP: NAME ──
+    if (step === "name") {
+      // Looks like a name — only letters and spaces, min 2 chars
+      const nameRegex = /^[A-Za-z\s]{2,}$/;
+      if (!nameRegex.test(trimmed)) {
+        addBotBubble(
+          `Hmm, I didn't catch that 😊<br>` +
+          `We're booking your appointment — could you please tell me your <strong>full name</strong>?`
+        );
+        return;
+      }
+      d.name = trimmed;
+      bookingFlow.step = "age";
+      addBotBubble(`Nice to meet you, <strong>${esc(d.name)}</strong>! 😊<br>Could you please share your <strong>age</strong>?`);
+
+    // ── STEP: AGE ──
+    } else if (step === "age") {
+      const age = parseInt(trimmed);
+      if (isNaN(age) || age < 1 || age > 120) {
+        addBotBubble(
+          `That doesn't look like a valid age 😊<br>` +
+          `Please enter your age as a number, like <strong>25</strong>.`
+        );
+        return;
+      }
+      d.age = String(age);
+      bookingFlow.step = "date";
+      addBotBubble(`Got it! 👍<br>What <strong>date</strong> would you prefer for your appointment?<br><span style="font-size:12px;opacity:0.7;">e.g. tomorrow, 15th June, 20/06</span>`);
+
+    // ── STEP: DATE ──
+    } else if (step === "date") {
+      // Must contain a number or the word tomorrow/today
+      const dateRegex = /(\d|tomorrow|today)/i;
+      if (!dateRegex.test(trimmed)) {
+        addBotBubble(
+          `I couldn't understand that as a date 😊<br>` +
+          `Please share a date like <strong>15th June</strong>, <strong>tomorrow</strong>, or <strong>20/06</strong>.`
+        );
+        return;
+      }
+      d.date = trimmed;
+      bookingFlow.step = "time";
+      addBotBubble(`Perfect! 📅<br>What <strong>time</strong> works best for you?<br><span style="font-size:12px;opacity:0.7;">e.g. 10 AM, 2:30 PM</span>`);
+
+    // ── STEP: TIME ──
+    } else if (step === "time") {
+      // Must contain a number
+      const timeRegex = /\d/;
+      if (!timeRegex.test(trimmed)) {
+        addBotBubble(
+          `I couldn't understand that as a time 😊<br>` +
+          `Please share a time like <strong>10 AM</strong> or <strong>2:30 PM</strong>.`
+        );
+        return;
+      }
+      d.time = trimmed.toUpperCase();
+      bookingFlow.step = "confirm";
+      showConfirmCard();
+    }
+
+  }, 700);
+}
+
+// ── CONFIRM BOOKING ──
+async function confirmBooking() {
+  const d = bookingFlow.data;
+
+  // Disable buttons to prevent double click
+  document.querySelectorAll(".confirm-btn").forEach(b => b.disabled = true);
+
+  try {
+    const res = await fetch(`${API_BASE}/book`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(d)
+    });
+
+    const data = await res.json();
+
+    // Remove confirm buttons
+    document.querySelectorAll(".confirm-btns").forEach(el => el.remove());
+
+    if (data.appointment) {
+      addConfirmedCard(data.appointment);
+    } else {
+      addErrorBubble(data.detail || "Could not book. Please try again.");
+    }
+
+  } catch(e) {
+    addErrorBubble("Server error. Please try again.");
+  }
+
+  resetBookingFlow();
+}
+
+// ── CANCEL BOOKING ──
+function cancelBooking() {
+  document.querySelectorAll(".confirm-btns").forEach(el => el.remove());
+  resetBookingFlow();
+  addBotBubble("No problem! Your booking has been cancelled. 😊<br>Feel free to ask me anything else.", 
+    ["Book an appointment", "Our services", "Clinic timings"]);
+}
+
+// ── MAIN SEND MESSAGE ──
+async function sendMessage() {
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  addUserBubble(text);
+  input.value = "";
+
+  // ── IF BOOKING FLOW IS ACTIVE → handle step ──
+  if (bookingFlow.active && bookingFlow.step !== "confirm") {
+    handleBookingStep(text);
+    return;
+  }
+
+  // ── NORMAL AI FLOW ──
+  conversationHistory.push({ role: "user", content: text });
+  showTyping();
+
+  try {
+    const res = await fetch(`${API_BASE}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        conversation_history: conversationHistory
+      })
+    });
+
+    hideTyping();
+
+    if (!res.ok) {
+      addErrorBubble("Something went wrong. Please try again.");
+      return;
+    }
+
+    const data = await res.json();
+    const intent = data.intent;
+    const reply = data.reply;
+
+    conversationHistory.push({ role: "assistant", content: reply });
+    if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-16);
+
+    // ── BOOKING INTENT → start step by step flow ──
+    if (intent === "booking" || intent === "incomplete_booking") {
+      startBookingFlow();
+      return;
+    }
+
+    if (intent === "greeting") {
+      addBotBubble(reply, ["Book an appointment", "Our services", "Clinic timings"]);
+    } else if (intent === "booking_failed") {
+      addBotBubble(reply, ["Book an appointment", "Our services", "Clinic timings"]);
+    } else {
+      addBotBubble(reply);
+    }
+
+  } catch (err) {
+    hideTyping();
+    addErrorBubble("Could not connect. Please check your connection.");
+  }
+}
+
+// ── VIEW ALL APPOINTMENTS ──
+async function viewAppointments() {
+  try {
+    const res = await fetch(`${API_BASE}/appointments`);
+    const data = await res.json();
+    if (!data.length) {
+      addBotBubble("No appointments booked yet.");
+      return;
+    }
+    let html = "<strong>📋 All Appointments</strong><br><br>";
+    data.forEach(a => {
+      html += `<div style="background:rgba(255,255,255,0.4);border-radius:10px;padding:8px 10px;margin-bottom:7px;font-size:12.5px;border:1px solid rgba(255,255,255,0.6);">
+        <strong>#${a.id} — ${esc(a.name)}</strong><br>
+        📅 ${esc(a.date)} &nbsp; ⏰ ${esc(a.time)}<br>
+        🦷 ${esc(a.service)} &nbsp;
+        <span style="color:${a.status==='confirmed'?'#0a7a5e':'#a33'};font-weight:500">${a.status}</span>
+      </div>`;
+    });
+    addBotBubble(html);
+  } catch(e) {
+    addErrorBubble("Could not fetch appointments.");
+  }
+}
+
+// ── WELCOME MESSAGE ──
+window.onload = () => {
+  setTimeout(() => {
+    addBotBubble(
+      "Hi there! 😊 I'm <strong>Bota</strong>, your AI assistant at <strong>SmileCare Dental Clinic</strong>.<br><br>I can help you book an appointment or answer any questions about our clinic.",
+      ["Book an appointment", "Our services", "Clinic timings"]
+    );
+  }, 400);
+};
+</script>
+</body>
+</html>

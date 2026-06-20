@@ -1,0 +1,104 @@
+import sqlite3
+import os
+from datetime import datetime
+
+DB_PATH = "bota.db"
+
+# ============================================================
+# INIT — creates table if not exists
+# ============================================================
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS appointments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            age TEXT DEFAULT '',
+            date TEXT NOT NULL,
+            time TEXT NOT NULL,
+            service TEXT DEFAULT 'General Consultation',
+            status TEXT DEFAULT 'confirmed',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+# ============================================================
+# CHECK DUPLICATE — same date + time already booked?
+# ============================================================
+def is_slot_taken(date, time):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id FROM appointments WHERE LOWER(date)=LOWER(?) AND LOWER(time)=LOWER(?) AND status='confirmed'",
+        (date.strip(), time.strip())
+    )
+    result = cursor.fetchone()
+    conn.close()
+    return result is not None
+
+# ============================================================
+# ADD APPOINTMENT
+# ============================================================
+def add_appointment(data):
+    init_db()
+
+    name = data.get("name", "").strip()
+    age = data.get("age", "").strip()
+    date = data.get("date", "").strip()
+    time = data.get("time", "").strip().upper()
+    service = data.get("service", "General Consultation").strip()
+
+    if not name or not date or not time:
+        return None, "Missing required fields"
+
+    if is_slot_taken(date, time):
+        return None, f"Sorry, the slot on {date} at {time} is already booked. Please choose a different time."
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO appointments (name, age, date, time, service) VALUES (?, ?, ?, ?, ?)",
+        (name, age, date, time, service)
+    )
+    conn.commit()
+    appointment_id = cursor.lastrowid
+    conn.close()
+
+    return {
+        "id": appointment_id,
+        "name": name,
+        "age": age,
+        "date": date,
+        "time": time,
+        "service": service,
+        "status": "confirmed"
+    }, None
+
+# ============================================================
+# GET ALL APPOINTMENTS
+# ============================================================
+def get_appointments():
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM appointments ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+# ============================================================
+# DELETE APPOINTMENT
+# ============================================================
+def delete_appointment(appointment_id):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE appointments SET status='cancelled' WHERE id=?", (appointment_id,))
+    conn.commit()
+    affected = cursor.rowcount
+    conn.close()
+    return affected > 0
