@@ -39,6 +39,9 @@ class AppointmentRequest(BaseModel):
     time: str
     service: Optional[str] = "General Consultation"
 
+    class Config:
+        extra = "ignore"  # silently ignore unexpected fields instead of 400 error
+
 # ============================================================
 # ROUTES
 # ============================================================

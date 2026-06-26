@@ -933,6 +933,15 @@ function handleBookingStep(userInput) {
 async function confirmBooking() {
   const d = bookingFlow.data;
 
+  // Build a clean payload — only fields the server expects
+  const payload = {
+    name: d.name,
+    age: d.age,
+    date: d.date,
+    time: d.time,
+    service: d.service
+  };
+
   // Disable buttons to prevent double click
   document.querySelectorAll(".confirm-btn").forEach(b => b.disabled = true);
 
@@ -940,7 +949,7 @@ async function confirmBooking() {
     const res = await fetch(`${API_BASE}/book`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(d)
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();

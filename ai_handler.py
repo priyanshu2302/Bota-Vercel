@@ -98,6 +98,11 @@ RULES:
 
         result = response.json()
 
+        # Gemini sometimes blocks/filters content and returns no candidates
+        if "candidates" not in result or not result["candidates"]:
+            print("GEMINI WARNING: No candidates in response —", result.get("promptFeedback", "no feedback info"))
+            return fallback_handler(user_message)
+
         # Extract text from Gemini response
         ai_text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
 
