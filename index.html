@@ -706,7 +706,7 @@ function quickReply(text) {
     showTimings();
     return;
   }
-  if (text === "Book an appointment") {
+  if (text === "Book an appointment" || text === "Book another appointment") {
     addUserBubble(text);
     startBookingFlow();
     return;
@@ -890,7 +890,38 @@ function handleBookingStep(userInput) {
         );
         return;
       }
+
+      // Check if AM/PM is missing — only digits (with optional : minutes), no am/pm letters
+      const hasAmPm = /am|pm/i.test(trimmed);
+      const isJustNumber = /^\d{1,2}(:\d{2})?$/.test(trimmed);
+
+      if (!hasAmPm && isJustNumber) {
+        // Store the raw number temporarily and ask for AM/PM
+        bookingFlow.data._pendingTime = trimmed;
+        bookingFlow.step = "time_ampm";
+        addBotBubble(
+          `Did you mean <strong>${esc(trimmed)} AM</strong> or <strong>${esc(trimmed)} PM</strong>? 😊`,
+          [`${trimmed} AM`, `${trimmed} PM`]
+        );
+        return;
+      }
+
       d.time = trimmed.toUpperCase();
+      bookingFlow.step = "confirm";
+      showConfirmCard();
+
+    // ── STEP: TIME AM/PM CLARIFICATION ──
+    } else if (step === "time_ampm") {
+      const hasAmPm = /am|pm/i.test(trimmed);
+      if (!hasAmPm) {
+        addBotBubble(
+          `Please choose <strong>AM</strong> or <strong>PM</strong> 😊`,
+          [`${d._pendingTime} AM`, `${d._pendingTime} PM`]
+        );
+        return;
+      }
+      d.time = trimmed.toUpperCase();
+      delete d._pendingTime;
       bookingFlow.step = "confirm";
       showConfirmCard();
     }
@@ -919,6 +950,12 @@ async function confirmBooking() {
 
     if (data.appointment) {
       addConfirmedCard(data.appointment);
+      setTimeout(() => {
+        addBotBubble(
+          "Would you like to do anything else? 😊",
+          ["Book another appointment", "Our services", "Clinic timings"]
+        );
+      }, 600);
     } else {
       addErrorBubble(data.detail || "Could not book. Please try again.");
     }
