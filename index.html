@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bota — SmileCare Dental Assistant</title>
+<title>Bota — Appointment Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -486,6 +486,43 @@
 
   .send-btn svg { width: 18px; height: 18px; fill: white; }
 
+  /* CALENDAR PICKER BUTTON — shown only during date step */
+  .calendar-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid rgba(61,217,179,0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    transition: all 0.2s;
+    animation: calBtnPulse 1.6s ease-in-out 2;
+  }
+  .calendar-btn:hover { background: rgba(255,255,255,0.8); transform: scale(1.05); }
+  .calendar-btn:active { transform: scale(0.95); }
+
+  @keyframes calBtnPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(61,217,179,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(61,217,179,0); }
+  }
+
+  /* Inline date picker inside chat bubble */
+  .inline-date-picker {
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(61,217,179,0.4);
+    background: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #0a4a3a;
+    outline: none;
+    cursor: pointer;
+  }
+
   /* POWERED BY */
   .powered {
     text-align: center;
@@ -515,7 +552,7 @@
       <div class="header-name">Bota</div>
       <div class="header-sub">
         <span class="status-dot"></span>
-        SmileCare Dental • Online now
+        <span id="clinicNameHeader">SmileCare Dental</span> • Online now
       </div>
     </div>
     <div class="header-btn" onclick="viewAppointments()" title="View appointments">📋</div>
@@ -537,12 +574,17 @@
         onkeydown="if(event.key==='Enter') sendMessage()"
       />
     </div>
+    <button class="calendar-btn" id="calendarBtn" onclick="document.getElementById('hiddenDateInput').showPicker ? document.getElementById('hiddenDateInput').showPicker() : document.getElementById('hiddenDateInput').click()" title="Pick a date" style="display:none;">
+      📅
+    </button>
+    <input type="date" id="hiddenDateInput" style="position:absolute; opacity:0; pointer-events:none; width:0; height:0;"
+      min="" onchange="onInlineDatePicked(this.value)" />
     <button class="send-btn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24"><path d="M2 21L23 12 2 3v7l15 2-15 2v7z"/></svg>
     </button>
   </div>
 
-  <div class="powered">Powered by Bota AI ✦ SmileCare Dental Clinic</div>
+  <div class="powered">Powered by Bota AI ✦ <span id="clinicNameFooter">SmileCare Dental Clinic</span></div>
 </div>
 
 <script>
@@ -551,18 +593,22 @@ let conversationHistory = [];
 
 // ── BOOKING FLOW STATE ──
 // step: null = no booking in progress
-// "name" → "age" → "date" → "time" → "confirm"
+// "name" → "age" → "phone" → "date" → "time" → "confirm"
 let bookingFlow = {
   active: false,
   step: null,
-  data: { name: "", age: "", date: "", time: "", service: "General Consultation" }
+  data: { name: "", age: "", phone: "", date: "", time: "", service: "General Consultation" }
 };
+
+// Clinic hours — fetched from server, used for time validation
+let clinicOpenHour  = 9;   // default 9 AM
+let clinicCloseHour = 20;  // default 8 PM
 
 function resetBookingFlow() {
   bookingFlow = {
     active: false,
     step: null,
-    data: { name: "", age: "", date: "", time: "", service: "General Consultation" }
+    data: { name: "", age: "", phone: "", date: "", time: "", service: "General Consultation" }
   };
 }
 
@@ -590,7 +636,7 @@ function addUserBubble(text) {
 }
 
 // ── ADD BOT BUBBLE ──
-function addBotBubble(html, chips) {
+function addBotBubble(html, chips, showDatePicker) {
   const cb = document.getElementById("chatBody");
   const row = document.createElement("div");
   row.className = "msg-row";
@@ -600,13 +646,36 @@ function addBotBubble(html, chips) {
     chipsHtml = `<div class="quick-replies">${chips.map(c=>`<span class="chip" onclick="quickReply('${esc(c)}')">${esc(c)}</span>`).join("")}</div>`;
   }
 
-  const bubbleClass = (chips && chips.length) ? "bubble bot has-chips" : "bubble bot";
+  let datePickerHtml = "";
+  if (showDatePicker) {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    datePickerHtml = `
+      <div style="margin-top:10px;">
+        <input type="date" id="inlineDatePicker" class="inline-date-picker"
+          min="${new Date().toISOString().split('T')[0]}"
+          max="${maxDate.toISOString().split('T')[0]}"
+          onchange="onInlineDatePicked(this.value)" />
+      </div>`;
+  }
+
+  const bubbleClass = (chips && chips.length) || showDatePicker ? "bubble bot has-chips" : "bubble bot";
   row.innerHTML = `
     <div class="bubble-icon bot-icon">🦷</div>
-    <div class="${bubbleClass}">${html}${chipsHtml}</div>
+    <div class="${bubbleClass}">${html}${chipsHtml}${datePickerHtml}</div>
   `;
   cb.appendChild(row);
   scrollBottom();
+}
+
+// ── HANDLE INLINE DATE PICKER SELECTION ──
+function onInlineDatePicked(isoDate) {
+  if (!isoDate) return;
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const picked = new Date(year, month - 1, day);
+  const formatted = formatDateObj(picked);
+  document.getElementById("msgInput").value = formatted;
+  sendMessage();
 }
 
 // ── SHOW CONFIRMATION CARD ──
@@ -623,6 +692,7 @@ function showConfirmCard() {
         <div class="bc-title">🗓 Appointment Summary</div>
         <div class="bc-row"><span class="bc-icon">👤</span><span class="bc-label">Name</span><span class="bc-val">${esc(d.name)}</span></div>
         <div class="bc-row"><span class="bc-icon">🎂</span><span class="bc-label">Age</span><span class="bc-val">${esc(d.age)} years</span></div>
+        <div class="bc-row"><span class="bc-icon">📞</span><span class="bc-label">Phone</span><span class="bc-val">+91 ${esc(d.phone)}</span></div>
         <div class="bc-row"><span class="bc-icon">📅</span><span class="bc-label">Date</span><span class="bc-val">${esc(d.date)}</span></div>
         <div class="bc-row"><span class="bc-icon">⏰</span><span class="bc-label">Time</span><span class="bc-val">${esc(d.time)}</span></div>
         <div class="bc-row"><span class="bc-icon">🦷</span><span class="bc-label">Service</span><span class="bc-val">${esc(d.service)}</span></div>
@@ -650,6 +720,7 @@ function addConfirmedCard(appt) {
         <div class="bc-title" style="color:#0a7a5e;">✅ Appointment Confirmed</div>
         <div class="bc-row"><span class="bc-icon">👤</span><span class="bc-label">Name</span><span class="bc-val">${esc(appt.name)}</span></div>
         <div class="bc-row"><span class="bc-icon">🎂</span><span class="bc-label">Age</span><span class="bc-val">${esc(appt.age || '-')} years</span></div>
+        <div class="bc-row"><span class="bc-icon">📞</span><span class="bc-label">Phone</span><span class="bc-val">+91 ${esc(appt.phone || '-')}</span></div>
         <div class="bc-row"><span class="bc-icon">📅</span><span class="bc-label">Date</span><span class="bc-val">${esc(appt.date)}</span></div>
         <div class="bc-row"><span class="bc-icon">⏰</span><span class="bc-label">Time</span><span class="bc-val">${esc(appt.time)}</span></div>
         <div class="bc-row"><span class="bc-icon">🦷</span><span class="bc-label">Service</span><span class="bc-val">${esc(appt.service || 'General Consultation')}</span></div>
@@ -771,14 +842,105 @@ function startBookingFlow() {
   }, 300);
 }
 
+// ── DATE VALIDATION HELPERS ──
+function parseDateToObj(dateStr) {
+  const s = dateStr.toLowerCase().trim();
+  const now = new Date();
+
+  if (s === "today") return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (s === "tomorrow" || s === "kal") {
+    const t = new Date(now); t.setDate(t.getDate() + 1);
+    return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  }
+  if (s === "parso") {
+    const t = new Date(now); t.setDate(t.getDate() + 2);
+    return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  }
+
+  const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11,
+    january:0,february:1,march:2,april:3,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+
+  // "15th June", "15 June", "15 jun"
+  const m1 = s.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)/);
+  if (m1) {
+    const day = parseInt(m1[1]);
+    const mon = months[m1[2].substring(0,3)];
+    if (mon !== undefined) {
+      const yr = now.getMonth() > mon ? now.getFullYear() + 1 : now.getFullYear();
+      return new Date(yr, mon, day);
+    }
+  }
+
+  // "15/06" or "15-06"
+  const m2 = s.match(/(\d{1,2})[\/\-](\d{1,2})/);
+  if (m2) {
+    const day = parseInt(m2[1]);
+    const mon = parseInt(m2[2]) - 1;
+    const yr = now.getMonth() > mon ? now.getFullYear() + 1 : now.getFullYear();
+    return new Date(yr, mon, day);
+  }
+
+  return null;
+}
+
+// Converts a Date object into a clean, unambiguous display string, e.g. "15 June 2026"
+function formatDateObj(d) {
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function isDateInPast(dateStr) {
+  const d = parseDateToObj(dateStr);
+  if (!d) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return d < today;
+}
+
+function isDateTooFarAhead(dateStr) {
+  const d = parseDateToObj(dateStr);
+  if (!d) return false;
+  const maxDate = new Date();
+  maxDate.setMonth(maxDate.getMonth() + 3);
+  return d > maxDate;
+}
+
+// ── TIME VALIDATION HELPERS ──
+function parseTimeToHour(timeStr) {
+  const s = timeStr.toLowerCase().trim();
+
+  // Handle Hinglish: "subah" = morning, "shaam" = evening/afternoon
+  if (s.includes("subah")) return 10;
+  if (s.includes("shaam") || s.includes("dopahar")) return 15;
+
+  const m = s.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+  if (!m) return null;
+
+  let hour = parseInt(m[1]);
+  const mins = m[2] ? parseInt(m[2]) : 0;
+  const period = m[3];
+
+  if (period === "pm" && hour !== 12) hour += 12;
+  if (period === "am" && hour === 12) hour = 0;
+
+  return hour;
+}
+
+function isTimeOutsideHours(timeStr) {
+  const hour = parseTimeToHour(timeStr);
+  if (hour === null) return false;
+  return hour < clinicOpenHour || hour >= clinicCloseHour;
+}
+
 // ── HANDLE BOOKING STEPS ──
 // What question to repeat for each step
 function getCurrentStepQuestion() {
   const step = bookingFlow.step;
-  if (step === "name") return "Could you please share your <strong>full name</strong>? 😊";
-  if (step === "age")  return "Could you please share your <strong>age</strong>? 😊";
-  if (step === "date") return "What <strong>date</strong> would you prefer?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. tomorrow, 15th June</span>";
-  if (step === "time") return "What <strong>time</strong> works best for you?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. 10 AM, 2:30 PM</span>";
+  if (step === "name")  return "Could you please share your <strong>full name</strong>? 😊";
+  if (step === "age")   return "Could you please share your <strong>age</strong>? 😊";
+  if (step === "phone") return "Could you please share your <strong>10-digit phone number</strong>? 😊";
+  if (step === "date")  return "What <strong>date</strong> would you prefer?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. tomorrow, 15th June</span>";
+  if (step === "time")  return "What <strong>time</strong> works best for you?<br><span style=\"font-size:12px;opacity:0.7;\">e.g. 10 AM, 2:30 PM</span>";
   return "";
 }
 
@@ -820,8 +982,10 @@ function handleBookingStep(userInput) {
     // ── TIMINGS QUESTION DURING BOOKING ──
     if (trimmed.toLowerCase().includes("timing") || trimmed.toLowerCase().includes("open") || trimmed.toLowerCase().includes("close")) {
       addBotBubble(
-        `Our clinic is open <strong>Monday to Saturday, 10 AM – 7 PM</strong>. We are closed on Sundays. 😊<br><br>` +
-        `Now, let's continue with your booking — ` + getCurrentStepQuestion()
+        `Our clinic is open <strong>Monday to Saturday, 9 AM – 8 PM</strong>. We are closed on Sundays. 😊<br><br>` +
+        `Now, let's continue with your booking — ` + getCurrentStepQuestion(),
+        null,
+        step === "date" // show picker if we're back at the date step
       );
       return;
     }
@@ -830,19 +994,20 @@ function handleBookingStep(userInput) {
     if (trimmed.toLowerCase().includes("service") || trimmed.toLowerCase().includes("treatment")) {
       addBotBubble(
         `We offer: Teeth Cleaning, Dental Fillings, Teeth Alignment, Root Canal Treatment, Tooth Extraction, and Teeth Whitening. 😊<br><br>` +
-        `Now, let's continue with your booking — ` + getCurrentStepQuestion()
+        `Now, let's continue with your booking — ` + getCurrentStepQuestion(),
+        null,
+        step === "date"
       );
       return;
     }
 
     // ── STEP: NAME ──
     if (step === "name") {
-      // Looks like a name — only letters and spaces, min 2 chars
       const nameRegex = /^[A-Za-z\s]{2,}$/;
       if (!nameRegex.test(trimmed)) {
         addBotBubble(
           `Hmm, I didn't catch that 😊<br>` +
-          `We're booking your appointment — could you please tell me your <strong>full name</strong>?`
+          `Could you please tell me your <strong>full name</strong>?`
         );
         return;
       }
@@ -861,52 +1026,134 @@ function handleBookingStep(userInput) {
         return;
       }
       d.age = String(age);
+      bookingFlow.step = "phone";
+      addBotBubble(`Got it! 👍<br>Could you please share your <strong>10-digit phone number</strong>?<br><span style="font-size:12px;opacity:0.7;">e.g. 9876543210</span>`);
+
+    // ── STEP: PHONE ──
+    } else if (step === "phone") {
+      // Remove spaces, dashes, +91 prefix if present
+      const cleaned = trimmed.replace(/[\s\-\(\)]/g, "").replace(/^\+?91/, "");
+
+      // Must be exactly 10 digits starting with 6, 7, 8, or 9 (valid Indian numbers)
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(cleaned)) {
+        addBotBubble(
+          `That doesn't look like a valid Indian phone number 😊<br>` +
+          `Please enter a <strong>10-digit number</strong> starting with 6, 7, 8, or 9.<br>` +
+          `<span style="font-size:12px;opacity:0.7;">e.g. 9876543210</span>`
+        );
+        return;
+      }
+      d.phone = cleaned;
       bookingFlow.step = "date";
-      addBotBubble(`Got it! 👍<br>What <strong>date</strong> would you prefer for your appointment?<br><span style="font-size:12px;opacity:0.7;">e.g. tomorrow, 15th June, 20/06</span>`);
+      addBotBubble(
+        `Perfect! 📱<br>What <strong>date</strong> would you prefer for your appointment?<br><span style="font-size:12px;opacity:0.7;">Tap the calendar below, or type "tomorrow", "kal", "15th June"</span>`,
+        null,
+        true // show date picker immediately
+      );
 
     // ── STEP: DATE ──
     } else if (step === "date") {
-      // Must contain a number or the word tomorrow/today
-      const dateRegex = /(\d|tomorrow|today)/i;
-      if (!dateRegex.test(trimmed)) {
+      // Accept Hinglish: kal = tomorrow, parso = day after tomorrow
+      const hinglishMap = {"kal": "tomorrow", "parso": "day after tomorrow", "aaj": "today"};
+      let processedDate = trimmed;
+      for (const [hindi, english] of Object.entries(hinglishMap)) {
+        if (processedDate.toLowerCase() === hindi) { processedDate = english; break; }
+      }
+
+      // Must contain a number or date keyword
+      const dateRegex = /(\d|tomorrow|today|kal|parso|aaj)/i;
+      if (!dateRegex.test(processedDate)) {
         addBotBubble(
           `I couldn't understand that as a date 😊<br>` +
-          `Please share a date like <strong>15th June</strong>, <strong>tomorrow</strong>, or <strong>20/06</strong>.`
+          `Please share a date like <strong>15th June</strong>, <strong>tomorrow</strong>, <strong>kal</strong>, or tap the calendar 📅 below.`,
+          null,
+          true
         );
         return;
       }
-      d.date = trimmed;
+
+      // Must actually parse into a real, valid calendar date
+      const parsedDateObj = parseDateToObj(processedDate);
+      if (!parsedDateObj || isNaN(parsedDateObj.getTime())) {
+        addBotBubble(
+          `I need a bit more detail to understand that date 😊<br>` +
+          `Please include the month, like <strong>15th June</strong>, or use <strong>tomorrow</strong> / <strong>kal</strong>, or tap the calendar 📅 below.`,
+          null,
+          true // show date picker button
+        );
+        return;
+      }
+
+      // Validate not in the past
+      if (isDateInPast(processedDate)) {
+        addBotBubble(
+          `Oops! That date has already passed 😊<br>` +
+          `Please choose a <strong>future date</strong>, or tap the calendar 📅 below.`,
+          null,
+          true
+        );
+        return;
+      }
+
+      // Validate not too far in the future (3 months)
+      if (isDateTooFarAhead(processedDate)) {
+        addBotBubble(
+          `We currently accept bookings up to <strong>3 months</strong> in advance 😊<br>` +
+          `Please choose a date within the next 3 months, or tap the calendar 📅 below.`,
+          null,
+          true
+        );
+        return;
+      }
+
+      // Store a clean, unambiguous formatted date (e.g. "15 June 2026")
+      d.date = formatDateObj(parsedDateObj);
       bookingFlow.step = "time";
-      addBotBubble(`Perfect! 📅<br>What <strong>time</strong> works best for you?<br><span style="font-size:12px;opacity:0.7;">e.g. 10 AM, 2:30 PM</span>`);
+      addBotBubble(`Perfect! 📅<br>What <strong>time</strong> works best for you?<br><span style="font-size:12px;opacity:0.7;">Our clinic is open 9 AM – 8 PM. e.g. 10 AM, 2:30 PM</span>`);
 
     // ── STEP: TIME ──
     } else if (step === "time") {
+      // Handle Hinglish time expressions
+      const hinglishTime = trimmed.toLowerCase();
+      let processedTime = trimmed;
+      if (hinglishTime === "subah" || hinglishTime === "morning") processedTime = "10 AM";
+      else if (hinglishTime === "dopahar" || hinglishTime === "afternoon") processedTime = "2 PM";
+      else if (hinglishTime === "shaam" || hinglishTime === "evening") processedTime = "5 PM";
+
       // Must contain a number
-      const timeRegex = /\d/;
-      if (!timeRegex.test(trimmed)) {
+      if (!/\d/.test(processedTime)) {
         addBotBubble(
           `I couldn't understand that as a time 😊<br>` +
-          `Please share a time like <strong>10 AM</strong> or <strong>2:30 PM</strong>.`
+          `Please share a time like <strong>10 AM</strong>, <strong>2:30 PM</strong>, or say <strong>subah/shaam</strong>.`
         );
         return;
       }
 
-      // Check if AM/PM is missing — only digits (with optional : minutes), no am/pm letters
-      const hasAmPm = /am|pm/i.test(trimmed);
-      const isJustNumber = /^\d{1,2}(:\d{2})?$/.test(trimmed);
+      // Check AM/PM missing
+      const hasAmPm = /am|pm/i.test(processedTime);
+      const isJustNumber = /^\d{1,2}(:\d{2})?$/.test(processedTime.trim());
 
       if (!hasAmPm && isJustNumber) {
-        // Store the raw number temporarily and ask for AM/PM
-        bookingFlow.data._pendingTime = trimmed;
+        bookingFlow.data._pendingTime = processedTime.trim();
         bookingFlow.step = "time_ampm";
         addBotBubble(
-          `Did you mean <strong>${esc(trimmed)} AM</strong> or <strong>${esc(trimmed)} PM</strong>? 😊`,
-          [`${trimmed} AM`, `${trimmed} PM`]
+          `Did you mean <strong>${esc(processedTime.trim())} AM</strong> or <strong>${esc(processedTime.trim())} PM</strong>? 😊`,
+          [`${processedTime.trim()} AM`, `${processedTime.trim()} PM`]
         );
         return;
       }
 
-      d.time = trimmed.toUpperCase();
+      // Validate business hours
+      if (isTimeOutsideHours(processedTime)) {
+        addBotBubble(
+          `Sorry, our clinic is open <strong>9 AM to 8 PM</strong>, Monday to Saturday 😊<br>` +
+          `Please choose a time within our working hours.`
+        );
+        return;
+      }
+
+      d.time = processedTime.toUpperCase();
       bookingFlow.step = "confirm";
       showConfirmCard();
 
@@ -920,6 +1167,18 @@ function handleBookingStep(userInput) {
         );
         return;
       }
+
+      // Validate business hours after AM/PM resolved
+      if (isTimeOutsideHours(trimmed)) {
+        delete d._pendingTime;
+        bookingFlow.step = "time";
+        addBotBubble(
+          `Sorry, our clinic is open <strong>9 AM to 8 PM</strong> 😊<br>` +
+          `Please choose a time within our working hours.`
+        );
+        return;
+      }
+
       d.time = trimmed.toUpperCase();
       delete d._pendingTime;
       bookingFlow.step = "confirm";
@@ -937,6 +1196,7 @@ async function confirmBooking() {
   const payload = {
     name: d.name,
     age: d.age,
+    phone: d.phone,
     date: d.date,
     time: d.time,
     service: d.service
@@ -1071,11 +1331,29 @@ async function viewAppointments() {
   }
 }
 
-// ── WELCOME MESSAGE ──
-window.onload = () => {
+// ── FETCH CLINIC CONFIG + WELCOME MESSAGE ──
+async function loadClinicConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/clinic-config`);
+    const data = await res.json();
+    window._clinicName = data.clinic_name || "the clinic";
+    // Apply business hours for time validation
+    if (data.open_hour !== undefined)  clinicOpenHour  = data.open_hour;
+    if (data.close_hour !== undefined) clinicCloseHour = data.close_hour;
+  } catch (e) {
+    window._clinicName = "the clinic";
+  }
+
+  // Apply to header and footer
+  document.getElementById("clinicNameHeader").textContent = window._clinicName;
+  document.getElementById("clinicNameFooter").textContent = window._clinicName;
+}
+
+window.onload = async () => {
+  await loadClinicConfig();
   setTimeout(() => {
     addBotBubble(
-      "Hi there! 😊 I'm <strong>Bota</strong>, your AI assistant at <strong>SmileCare Dental Clinic</strong>.<br><br>I can help you book an appointment or answer any questions about our clinic.",
+      `Hi there! 😊 I'm <strong>Bota</strong>, your AI assistant at <strong>${window._clinicName}</strong>.<br><br>I can help you book an appointment or answer any questions about our clinic.`,
       ["Book an appointment", "Our services", "Clinic timings"]
     );
   }, 400);

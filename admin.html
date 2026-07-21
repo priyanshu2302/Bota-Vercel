@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bota Admin — SmileCare Dental</title>
+<title>Bota Admin Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -1224,7 +1224,7 @@
   <div class="login-card">
     <div class="login-logo">🦷</div>
     <div class="login-title">Admin Login</div>
-    <div class="login-sub">SmileCare Dental Clinic — Staff Access</div>
+    <div class="login-sub" id="loginClinicName">Staff Access</div>
     <input class="login-input" type="text" id="loginUser" placeholder="Username" autocomplete="off"/>
     <input class="login-input" type="password" id="loginPass" placeholder="Password"
       onkeydown="if(event.key==='Enter') doLogin()"/>
@@ -1239,7 +1239,7 @@
   <!-- Mobile Header — always visible on mobile -->
   <div class="mobile-header">
     <div class="hamburger" onclick="toggleSidebar()">☰</div>
-    <div class="mobile-title">🦷 SmileCare Admin</div>
+    <div class="mobile-title" id="mobileClinicName">🦷 Bota Admin</div>
   </div>
 
   <!-- Sidebar Overlay -->
@@ -1251,7 +1251,7 @@
       <div class="sidebar-logo-icon">🦷</div>
       <div>
         <div class="sidebar-logo-text">Bota Admin</div>
-        <div class="sidebar-logo-sub">SmileCare Dental</div>
+        <div class="sidebar-logo-sub" id="sidebarClinicName">SmileCare Dental</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1283,7 +1283,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">Booking Dashboard</div>
-          <div class="page-sub">SmileCare Dental Clinic — All appointments</div>
+          <div class="page-sub" id="pageHeaderClinicName">All appointments</div>
         </div>
         <div class="header-right">
           <div class="date-badge" id="todayDate">—</div>
@@ -1379,7 +1379,12 @@
       <div class="table-card">
         <div class="card-header">
           <div class="card-title">All Bookings</div>
-          <div class="card-badge" id="tableCount">0</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="card-badge" id="tableCount">0</div>
+            <button class="refresh-btn" onclick="exportCSV()" style="background:linear-gradient(135deg,#4a90d9,#2f6fb8);">
+              ⬇ Export CSV
+            </button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -1388,6 +1393,7 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Age</th>
+                <th>Phone</th>
                 <th>Date</th>
                 <th>Time</th>
                 <th>Service</th>
@@ -1397,7 +1403,7 @@
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="8">
+                <td colspan="9">
                   <div class="empty-state">
                     <div class="empty-icon">📭</div>
                     <div class="empty-text">No bookings yet</div>
@@ -1504,30 +1510,52 @@
 <script>
 const API_BASE = window.location.origin;
 
-// ── HARDCODED CREDENTIALS ──
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "smilecare2024";
-
 let allAppointments = [];
 let calYear, calMonth;
 let serviceChart, trendChart;
 
-// ── LOGIN ──
-function doLogin() {
+// ── LOGIN — verified against server, credentials come from env vars per clinic ──
+async function doLogin() {
   const user = document.getElementById("loginUser").value.trim();
   const pass = document.getElementById("loginPass").value.trim();
   const err  = document.getElementById("loginError");
+  const btn  = document.querySelector(".login-btn");
 
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appShell").style.display = "block";
-    err.style.display = "none";
-    initDashboard();
-  } else {
+  if (!user || !pass) {
+    err.textContent = "❌ Please enter both username and password";
     err.style.display = "block";
-    document.getElementById("loginPass").value = "";
-    document.getElementById("loginPass").focus();
+    return;
   }
+
+  const originalBtnText = btn.textContent;
+  btn.textContent = "Logging in...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+
+    if (res.ok) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("appShell").style.display = "block";
+      err.style.display = "none";
+      initDashboard();
+    } else {
+      err.textContent = "❌ Wrong username or password";
+      err.style.display = "block";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("loginPass").focus();
+    }
+  } catch (e) {
+    err.textContent = "❌ Could not connect to server. Please try again.";
+    err.style.display = "block";
+  }
+
+  btn.textContent = originalBtnText;
+  btn.disabled = false;
 }
 
 function doLogout() {
@@ -1807,6 +1835,34 @@ function showToast(msg, type = "success") {
 }
 
 // ── INIT ──
+// ── CLINIC CONFIG — fetched once, applied everywhere ──
+let clinicNameCache = "Bota Admin";
+
+async function loadClinicConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/clinic-config`);
+    const data = await res.json();
+    clinicNameCache = data.clinic_name || "Bota Admin";
+  } catch (e) {
+    clinicNameCache = "Bota Admin";
+  }
+
+  const loginEl = document.getElementById("loginClinicName");
+  if (loginEl) loginEl.textContent = `${clinicNameCache} — Staff Access`;
+
+  const mobileEl = document.getElementById("mobileClinicName");
+  if (mobileEl) mobileEl.textContent = `🦷 ${clinicNameCache}`;
+
+  const sidebarEl = document.getElementById("sidebarClinicName");
+  if (sidebarEl) sidebarEl.textContent = clinicNameCache;
+
+  const pageHeaderEl = document.getElementById("pageHeaderClinicName");
+  if (pageHeaderEl) pageHeaderEl.textContent = `${clinicNameCache} — All appointments`;
+}
+
+// Load clinic name as soon as page opens (so login screen shows correct name)
+loadClinicConfig();
+
 function initDashboard() {
   // Set today's date
   const now = new Date();
@@ -1840,6 +1896,12 @@ function renderAll() {
   renderTable(allAppointments);
   renderCalendar();
   renderCharts();
+}
+
+// ── EXPORT CSV — downloads bookings as Excel-compatible file ──
+function exportCSV() {
+  window.location.href = `${API_BASE}/appointments/export`;
+  showToast("📥 Downloading CSV...", "success");
 }
 
 // ── STATS ──
@@ -1895,7 +1957,7 @@ function renderTable(data) {
   document.getElementById("tableCount").textContent = data.length;
 
   if (!data.length) {
-    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No bookings found</div></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No bookings found</div></div></td></tr>`;
     return;
   }
 
@@ -1904,6 +1966,7 @@ function renderTable(data) {
       <td><strong>#${a.id}</strong></td>
       <td>${esc(a.name)}</td>
       <td>${esc(a.age || '—')}</td>
+      <td>${a.phone ? `+91 ${esc(a.phone)}` : '—'}</td>
       <td>${esc(a.date)}</td>
       <td>${esc(a.time)}</td>
       <td>${esc(a.service || 'General Consultation')}</td>

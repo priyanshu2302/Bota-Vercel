@@ -2,46 +2,15 @@ import os
 import re
 import json
 import requests
-from dotenv import load_dotenv
+from config import GEMINI_API_KEY, CLINIC_NAME, build_clinic_info_text
 
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 # ============================================================
-# CLINIC KNOWLEDGE BASE
+# CLINIC KNOWLEDGE BASE — built dynamically from config.py
+# (which reads environment variables set per clinic)
 # ============================================================
-CLINIC_INFO = """
-Clinic Name: SmileCare Dental Clinic
-Location: 42, Main Market Road, Lajpat Nagar, New Delhi - 110024
-Phone: +91 98765 43210
-Email: smilecare@gmail.com
-
-Working Hours:
-- Monday to Saturday: 9:00 AM to 8:00 PM
-- Sunday: 10:00 AM to 2:00 PM (Emergency only)
-
-Services:
-- Teeth Cleaning
-- Dental Fillings
-- Teeth Alignment
-- Root Canal Treatment
-- Tooth Extraction
-- Teeth Whitening
-
-Doctors:
-- Dr. Priya Sharma (BDS, MDS) - Lead Dentist, 12 years experience
-- Dr. Arjun Mehta (BDS) - General Dentist, 5 years experience
-
-Payment: Cash, UPI, All major cards accepted
-Parking: Available
-
-Important Notes:
-- Appointments are 30-45 minutes typically
-- Please arrive 5 minutes early
-- Carry any previous dental records if available
-"""
+CLINIC_INFO = build_clinic_info_text()
 
 # ============================================================
 # MAIN AI FUNCTION — INTENT BASED
@@ -54,7 +23,7 @@ def get_bota_response(user_message, conversation_history=None):
             role = "User" if msg["role"] == "user" else "Bota"
             history_text += f"{role}: {msg['content']}\n"
 
-    prompt = f"""You are Bota, a friendly and smart AI assistant for SmileCare Dental Clinic.
+    prompt = f"""You are Bota, a friendly and smart AI assistant for {CLINIC_NAME}.
 
 CLINIC INFORMATION:
 {CLINIC_INFO}
@@ -78,6 +47,10 @@ RULES:
 - If booking details are partial, set intent to "incomplete_booking" and ask for missing info
 - Keep replies warm, concise, professional
 - Use Hindi words occasionally like Ji, bilkul to feel local and friendly
+- Understand common Hinglish/Hindi words for dates and times: "kal"=tomorrow, "aaj"=today,
+  "parso"=day after tomorrow, "subah"=morning, "shaam"=evening, "dopahar"=afternoon, "raat"=night.
+  Convert these to standard English date/time in booking_data.
+- Be tolerant of typos and informal spelling — infer the intended meaning
 - NEVER make up information not in the clinic info
 - Only return valid JSON, nothing else, no markdown, no backticks
 """
@@ -132,23 +105,41 @@ def fallback_handler(text):
 
     text_lower = text.lower()
 
-    greetings = ["hi", "hello", "hey", "namaste", "hlo", "hii"]
+    greetings = ["hi", "hello", "hey", "namaste", "hlo", "hii", "namaskar", "hola"]
     if any(g in text_lower for g in greetings):
         return {
             "intent": "greeting",
-            "reply": "Hi there! I am Bota, your assistant at SmileCare Dental Clinic. I can help you book an appointment or answer questions about our clinic. How can I help you today?",
+            "reply": f"Hi there! I am Bota, your assistant at {CLINIC_NAME}. I can help you book an appointment or answer questions about our clinic. How can I help you today?",
             "booking_data": None
         }
 
-    booking_keywords = ["book", "appointment", "schedule", "fix", "slot", "visit", "checkup", "consultation"]
+    booking_keywords = [
+        "book", "appointment", "schedule", "fix", "slot", "visit", "checkup", "consultation",
+        "appointment chahiye", "milna hai", "dikhana hai", "checkup karana hai", "time chahiye"
+    ]
     if any(k in text_lower for k in booking_keywords):
-        name_match = re.search(r"(?:my name is|name is|for|i am|i'm)\s+([A-Za-z]+)", text, re.IGNORECASE)
+        name_match = re.search(r"(?:my name is|name is|for|i am|i'm|mera naam)\s+([A-Za-z]+)", text, re.IGNORECASE)
         time_match = re.search(r'(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM))', text)
-        date_match = re.search(r'(tomorrow|today|\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\d{1,2}[\/\-]\d{1,2})', text, re.IGNORECASE)
+
+        # Hinglish date/time words mapped to English equivalents
+        hinglish_dates = {
+            "kal": "tomorrow", "aaj": "today", "parso": "day after tomorrow"
+        }
+        hinglish_time = {
+            "subah": "morning", "shaam": "evening", "dopahar": "afternoon", "raat": "night"
+        }
+
+        date = ""
+        for hindi_word, eng in hinglish_dates.items():
+            if hindi_word in text_lower:
+                date = eng
+                break
+        if not date:
+            date_match = re.search(r'(tomorrow|today|\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\d{1,2}[\/\-]\d{1,2})', text, re.IGNORECASE)
+            date = date_match.group(1) if date_match else ""
 
         name = name_match.group(1) if name_match else ""
         time = time_match.group(1).upper() if time_match else ""
-        date = date_match.group(1) if date_match else ""
 
         if name and time and date:
             return {

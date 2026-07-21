@@ -3,13 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
-import os
-from dotenv import load_dotenv
 
 from ai_handler import get_bota_response
 from database import add_appointment, get_appointments, delete_appointment, init_db
-
-load_dotenv()
+from config import CLINIC_NAME, ADMIN_USERNAME, ADMIN_PASSWORD, CLINIC_OPEN_HOUR, CLINIC_CLOSE_HOUR
 
 # Init DB on startup
 init_db()
@@ -35,12 +32,17 @@ class ChatRequest(BaseModel):
 class AppointmentRequest(BaseModel):
     name: str
     age: Optional[str] = ""
+    phone: Optional[str] = ""
     date: str
     time: str
     service: Optional[str] = "General Consultation"
 
     class Config:
         extra = "ignore"  # silently ignore unexpected fields instead of 400 error
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 # ============================================================
 # ROUTES
@@ -57,6 +59,22 @@ def serve_ui():
 @app.get("/admin")
 def serve_admin():
     return FileResponse("admin.html")
+
+# Clinic config — frontend fetches this so HTML never hardcodes clinic name
+@app.get("/clinic-config")
+def get_clinic_config():
+    return {
+        "clinic_name": CLINIC_NAME,
+        "open_hour": CLINIC_OPEN_HOUR,
+        "close_hour": CLINIC_CLOSE_HOUR
+    }
+
+# Admin login — checked server-side now, not hardcoded in JS
+@app.post("/admin-login")
+def admin_login(req: LoginRequest):
+    if req.username == ADMIN_USERNAME and req.password == ADMIN_PASSWORD:
+        return {"success": True}
+    raise HTTPException(status_code=401, detail="Invalid username or password")
 
 # Main chat endpoint — handles everything
 @app.post("/chat")
@@ -118,3 +136,36 @@ def cancel_appointment(appointment_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Appointment not found")
     return {"message": "Appointment cancelled ✅"}
+
+# Export all appointments as CSV — opens directly in Excel
+@app.get("/appointments/export")
+def export_appointments():
+    import csv
+    import io
+    from fastapi.responses import StreamingResponse
+
+    appointments = get_appointments()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Name", "Age", "Phone", "Date", "Time", "Service", "Status", "Created At"])
+
+    for a in appointments:
+        writer.writerow([
+            a.get("id", ""),
+            a.get("name", ""),
+            a.get("age", ""),
+            a.get("phone", ""),
+            a.get("date", ""),
+            a.get("time", ""),
+            a.get("service", ""),
+            a.get("status", ""),
+            a.get("created_at", "")
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=bota_appointments.csv"}
+    )
