@@ -1864,6 +1864,12 @@ async function loadClinicConfig() {
 loadClinicConfig();
 
 function initDashboard() {
+  // Make sure dashboard page is visible on first login
+  // (it's hidden by default via CSS, only becomes visible when a nav item is clicked)
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("patientsPage").style.display = "none";
+  document.getElementById("calendarPage").style.display = "none";
+
   // Set today's date
   const now = new Date();
   document.getElementById("todayDate").textContent = now.toLocaleDateString("en-IN", {
