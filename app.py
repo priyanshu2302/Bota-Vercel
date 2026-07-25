@@ -70,11 +70,32 @@ def get_clinic_config():
     }
 
 # Admin login — checked server-side now, not hardcoded in JS
+# Uses current_admin_password so a runtime password change (below) takes effect immediately
+current_admin_password = ADMIN_PASSWORD
+
 @app.post("/admin-login")
 def admin_login(req: LoginRequest):
-    if req.username == ADMIN_USERNAME and req.password == ADMIN_PASSWORD:
+    if req.username == ADMIN_USERNAME and req.password == current_admin_password:
         return {"success": True}
     raise HTTPException(status_code=401, detail="Invalid username or password")
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+# Change admin password — NOTE: this only persists for as long as the server stays
+# running. A server restart or redeploy resets it back to ADMIN_PASSWORD from the
+# environment variable. For a permanent change, update ADMIN_PASSWORD in Render's
+# environment variables instead.
+@app.post("/admin-change-password")
+def admin_change_password(req: ChangePasswordRequest):
+    global current_admin_password
+    if req.current_password != current_admin_password:
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    current_admin_password = req.new_password
+    return {"success": True}
 
 # Main chat endpoint — handles everything
 @app.post("/chat")

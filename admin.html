@@ -1093,6 +1093,18 @@
     padding: 2px 4px;
   }
 
+  /* ── SETTINGS PAGE ── */
+  .settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-row:last-of-type { border-bottom: none; }
+  .settings-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .settings-value { font-size: 13.5px; color: var(--text); font-weight: 600; text-align: right; }
+
   /* ── SLIDE PANEL ── */
   .slide-panel-overlay {
     display: none;
@@ -1489,6 +1501,54 @@
     </div>
   </div>
 
+  <!-- ── SETTINGS PAGE ── -->
+  <div id="settingsPage" style="display:none;">
+    <div class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-sub">Clinic information and account settings</div>
+      </div>
+    </div>
+
+    <!-- Clinic Info (read-only) -->
+    <div class="table-card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">🏥 Clinic Information</div>
+      </div>
+      <div style="padding:20px;">
+        <div class="settings-row">
+          <span class="settings-label">Clinic Name</span>
+          <span class="settings-value" id="settingsClinicName">—</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Business Hours</span>
+          <span class="settings-value" id="settingsHours">—</span>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-top:14px;">
+          To update clinic details or hours, please contact your developer.
+        </p>
+      </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="table-card">
+      <div class="card-header">
+        <div class="card-title">🔐 Change Password</div>
+      </div>
+      <div style="padding:20px; max-width:360px;">
+        <input class="login-input" type="password" id="currentPassword" placeholder="Current password" style="margin-bottom:12px;"/>
+        <input class="login-input" type="password" id="newPassword" placeholder="New password" style="margin-bottom:12px;"/>
+        <input class="login-input" type="password" id="confirmPassword" placeholder="Confirm new password" style="margin-bottom:14px;"/>
+        <button class="refresh-btn" onclick="changePassword()" style="width:100%; justify-content:center;">
+          Update Password
+        </button>
+        <div class="login-error" id="passwordError"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
   <!-- ── SLIDE PANEL ── -->
 <div class="slide-panel-overlay" id="slidePanelOverlay" onclick="closeSlidePanel()"></div>
 <div class="slide-panel" id="slidePanel">
@@ -1584,6 +1644,7 @@ function showPage(page, navEl) {
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("patientsPage").style.display = "none";
   document.getElementById("calendarPage").style.display = "none";
+  document.getElementById("settingsPage").style.display = "none";
 
   if (page === "dashboard") {
     document.getElementById("dashboard").style.display = "block";
@@ -1596,10 +1657,8 @@ function showPage(page, navEl) {
     if (!fullCalYear) { fullCalYear = now.getFullYear(); fullCalMonth = now.getMonth(); }
     renderFullCalendar();
   } else if (page === "settings") {
-    showToast("⚙️ Settings coming soon", "success");
-    document.getElementById("dashboard").style.display = "block";
-    document.getElementById("nav-dashboard").classList.add("active");
-    if (navEl) navEl.classList.remove("active");
+    document.getElementById("settingsPage").style.display = "block";
+    loadSettingsInfo();
   }
 }
 
@@ -1837,12 +1896,16 @@ function showToast(msg, type = "success") {
 // ── INIT ──
 // ── CLINIC CONFIG — fetched once, applied everywhere ──
 let clinicNameCache = "Bota Admin";
+let clinicOpenHourCache = 9;
+let clinicCloseHourCache = 20;
 
 async function loadClinicConfig() {
   try {
     const res = await fetch(`${API_BASE}/clinic-config`);
     const data = await res.json();
     clinicNameCache = data.clinic_name || "Bota Admin";
+    if (data.open_hour !== undefined)  clinicOpenHourCache  = data.open_hour;
+    if (data.close_hour !== undefined) clinicCloseHourCache = data.close_hour;
   } catch (e) {
     clinicNameCache = "Bota Admin";
   }
@@ -1863,12 +1926,81 @@ async function loadClinicConfig() {
 // Load clinic name as soon as page opens (so login screen shows correct name)
 loadClinicConfig();
 
+// ── SETTINGS PAGE ──
+function formatHour(h) {
+  const period = h >= 12 ? "PM" : "AM";
+  let hour12 = h % 12;
+  if (hour12 === 0) hour12 = 12;
+  return `${hour12} ${period}`;
+}
+
+function loadSettingsInfo() {
+  document.getElementById("settingsClinicName").textContent = clinicNameCache;
+  document.getElementById("settingsHours").textContent =
+    `${formatHour(clinicOpenHourCache)} – ${formatHour(clinicCloseHourCache)}`;
+
+  // Clear password fields each time settings page opens
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.getElementById("passwordError").style.display = "none";
+}
+
+async function changePassword() {
+  const current = document.getElementById("currentPassword").value.trim();
+  const newPass = document.getElementById("newPassword").value.trim();
+  const confirm = document.getElementById("confirmPassword").value.trim();
+  const err = document.getElementById("passwordError");
+
+  if (!current || !newPass || !confirm) {
+    err.textContent = "❌ Please fill in all fields";
+    err.style.display = "block";
+    return;
+  }
+
+  if (newPass !== confirm) {
+    err.textContent = "❌ New passwords do not match";
+    err.style.display = "block";
+    return;
+  }
+
+  if (newPass.length < 6) {
+    err.textContent = "❌ New password must be at least 6 characters";
+    err.style.display = "block";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin-change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password: current, new_password: newPass })
+    });
+
+    if (res.ok) {
+      err.style.display = "none";
+      showToast("✅ Password updated successfully", "success");
+      document.getElementById("currentPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    } else {
+      const data = await res.json();
+      err.textContent = "❌ " + (data.detail || "Could not update password");
+      err.style.display = "block";
+    }
+  } catch (e) {
+    err.textContent = "❌ Could not connect to server";
+    err.style.display = "block";
+  }
+}
+
 function initDashboard() {
   // Make sure dashboard page is visible on first login
   // (it's hidden by default via CSS, only becomes visible when a nav item is clicked)
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("patientsPage").style.display = "none";
   document.getElementById("calendarPage").style.display = "none";
+  document.getElementById("settingsPage").style.display = "none";
 
   // Set today's date
   const now = new Date();
