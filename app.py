@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ai_handler import get_bota_response
-from database import add_appointment, get_appointments, delete_appointment, init_db
+from database import add_appointment, get_appointments, delete_appointment, init_db, get_setting, set_setting
 from config import CLINIC_NAME, ADMIN_USERNAME, ADMIN_PASSWORD, CLINIC_OPEN_HOUR, CLINIC_CLOSE_HOUR
 
 # Init DB on startup
@@ -69,13 +69,15 @@ def get_clinic_config():
         "close_hour": CLINIC_CLOSE_HOUR
     }
 
-# Admin login — checked server-side now, not hardcoded in JS
-# Uses current_admin_password so a runtime password change (below) takes effect immediately
-current_admin_password = ADMIN_PASSWORD
+# Admin login — checked server-side, password persisted in the database so
+# changes survive server restarts/redeploys. Falls back to ADMIN_PASSWORD
+# (from environment variables) if no password has been set in the database yet.
+def get_current_admin_password():
+    return get_setting("admin_password", ADMIN_PASSWORD)
 
 @app.post("/admin-login")
 def admin_login(req: LoginRequest):
-    if req.username == ADMIN_USERNAME and req.password == current_admin_password:
+    if req.username == ADMIN_USERNAME and req.password == get_current_admin_password():
         return {"success": True}
     raise HTTPException(status_code=401, detail="Invalid username or password")
 
@@ -83,18 +85,15 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
-# Change admin password — NOTE: this only persists for as long as the server stays
-# running. A server restart or redeploy resets it back to ADMIN_PASSWORD from the
-# environment variable. For a permanent change, update ADMIN_PASSWORD in Render's
-# environment variables instead.
+# Change admin password — persisted in the database, survives server restarts
+# and redeploys. Overrides the ADMIN_PASSWORD environment variable once set.
 @app.post("/admin-change-password")
 def admin_change_password(req: ChangePasswordRequest):
-    global current_admin_password
-    if req.current_password != current_admin_password:
+    if req.current_password != get_current_admin_password():
         raise HTTPException(status_code=401, detail="Current password is incorrect")
     if len(req.new_password) < 6:
         raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
-    current_admin_password = req.new_password
+    set_setting("admin_password", req.new_password)
     return {"success": True}
 
 # Main chat endpoint — handles everything

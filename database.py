@@ -53,6 +53,38 @@ def init_db():
     if "phone" not in columns:
         cursor.execute("ALTER TABLE appointments ADD COLUMN phone TEXT DEFAULT ''")
 
+    # Settings table — key/value store, used to persist things like the admin
+    # password across server restarts (environment variables alone don't survive
+    # in-app changes, so once changed here it overrides the env var default)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+# ============================================================
+# SETTINGS — simple key/value persistence
+# ============================================================
+def get_setting(key, default=None):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT value FROM settings WHERE key=?", (key,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else default
+
+def set_setting(key, value):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO settings (key, value) VALUES (?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        (key, value)
+    )
     conn.commit()
     conn.close()
 
