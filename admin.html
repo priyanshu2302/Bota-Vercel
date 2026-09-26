@@ -1618,7 +1618,13 @@ async function doLogin() {
   btn.disabled = false;
 }
 
-function doLogout() {
+async function doLogout() {
+  try {
+    await fetch(`${API_BASE}/admin-logout`, { method: "POST" });
+  } catch (e) {
+    // Still return to the login screen if the logout request fails.
+  }
+
   document.getElementById("appShell").style.display = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("loginUser").value = "";

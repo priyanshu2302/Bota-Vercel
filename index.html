@@ -1308,27 +1308,9 @@ async function sendMessage() {
 }
 
 // ── VIEW ALL APPOINTMENTS ──
-async function viewAppointments() {
-  try {
-    const res = await fetch(`${API_BASE}/appointments`);
-    const data = await res.json();
-    if (!data.length) {
-      addBotBubble("No appointments booked yet.");
-      return;
-    }
-    let html = "<strong>📋 All Appointments</strong><br><br>";
-    data.forEach(a => {
-      html += `<div style="background:rgba(255,255,255,0.4);border-radius:10px;padding:8px 10px;margin-bottom:7px;font-size:12.5px;border:1px solid rgba(255,255,255,0.6);">
-        <strong>#${a.id} — ${esc(a.name)}</strong><br>
-        📅 ${esc(a.date)} &nbsp; ⏰ ${esc(a.time)}<br>
-        🦷 ${esc(a.service)} &nbsp;
-        <span style="color:${a.status==='confirmed'?'#0a7a5e':'#a33'};font-weight:500">${a.status}</span>
-      </div>`;
-    });
-    addBotBubble(html);
-  } catch(e) {
-    addErrorBubble("Could not fetch appointments.");
-  }
+function viewAppointments() {
+  // Appointment records are admin-only. Send users to the protected dashboard.
+  window.location.href = `${API_BASE}/admin`;
 }
 
 // ── FETCH CLINIC CONFIG + WELCOME MESSAGE ──
