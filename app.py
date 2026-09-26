@@ -9,7 +9,7 @@ import secrets
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, RedirectResponseStreamingResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 
@@ -156,10 +156,7 @@ def get_current_admin_password():
 # ============================================================
 @app.get("/")
 def home():
-    return {
-        "message": "Bota AI Appointment Assistant is Running 🚀",
-        "status": "ok",
-    }
+    return RedirectResponse(url="/ui")
 
 
 @app.get("/ui")
