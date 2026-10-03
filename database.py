@@ -1,6 +1,38 @@
+import sqlite3
 import os
 import re
-import sqlite3
+from datetime import datetime
+
+def normalize_date(date):
+    date = date.strip()
+
+    for fmt in ("%Y-%m-%d", "%d %B %Y", "%d %b %Y"):
+        try:
+            parsed = datetime.strptime(date, fmt)
+            return f"{parsed.day} {parsed.strftime('%B')} {parsed.year}"
+        except ValueError:
+            continue
+
+    return date
+
+def normalize_time(time):
+    time = time.strip().upper()
+    time = re.sub(r'\s+', ' ', time)
+
+    # Normalize 10AM → 10 AM
+    time = re.sub(r'(\d)(AM|PM)$', r'\1 \2', time)
+
+    # Normalize 10:00AM → 10:00 AM
+    time = re.sub(r'(\d{1,2}:\d{2})(AM|PM)$', r'\1 \2', time)
+
+    for fmt in ("%I:%M %p", "%I %p", "%H:%M", "%H"):
+        try:
+            parsed = datetime.strptime(time, fmt)
+            return parsed.strftime("%I:%M %p").lstrip("0")
+        except ValueError:
+            continue
+
+    return time
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 SQLITE_DB_PATH = os.path.join(os.path.dirname(__file__), "bota.db")
@@ -138,41 +170,49 @@ def set_setting(key, value):
     conn.commit()
     conn.close()
 
-
 def is_slot_taken(date, time):
+    normalized_time = normalize_time(time)
+
     conn = get_connection()
     cursor = conn.cursor()
 
     if is_postgres():
-        cursor.execute("""
-            SELECT id
+        cursor.execute(
+            """
+            SELECT time
             FROM appointments
-            WHERE LOWER(date)=LOWER(%s)
-              AND LOWER(time)=LOWER(%s)
-              AND status='confirmed'
-        """, (date.strip(), time.strip()))
+            WHERE LOWER(date) = LOWER(%s)
+            AND status = 'confirmed'
+            """,
+            (date.strip(),)
+        )
     else:
-        cursor.execute("""
-            SELECT id
+        cursor.execute(
+            """
+            SELECT time
             FROM appointments
-            WHERE LOWER(date)=LOWER(?)
-              AND LOWER(time)=LOWER(?)
-              AND status='confirmed'
-        """, (date.strip(), time.strip()))
+            WHERE LOWER(date) = LOWER(?)
+            AND status = 'confirmed'
+            """,
+            (date.strip(),)
+        )
 
-    result = cursor.fetchone()
+    rows = cursor.fetchall()
     conn.close()
-    return result is not None
 
+    for row in rows:
+        if normalize_time(str(row[0])) == normalized_time:
+            return True
+
+    return False
 
 def add_appointment(data):
-    init_db()
 
     name = data.get("name", "").strip()
     age = data.get("age", "").strip()
     phone = data.get("phone", "").strip()
-    date = data.get("date", "").strip()
-    time = data.get("time", "").strip().upper()
+    date = normalize_date(data.get("date", ""))
+    time = normalize_time(data.get("time", ""))
     service = data.get("service", "General Consultation").strip()
 
     if not name or not date or not time:
@@ -225,7 +265,6 @@ def add_appointment(data):
 
 
 def get_appointments():
-    init_db()
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -276,3 +315,85 @@ def delete_appointment(appointment_id):
     affected = cursor.rowcount
     conn.close()
     return affected > 0
+
+def permanently_delete_appointment(appointment_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if is_postgres():
+        cursor.execute("""
+            DELETE FROM appointments
+            WHERE id=%s
+        """, (appointment_id,))
+    else:
+        cursor.execute("""
+            DELETE FROM appointments
+            WHERE id=?
+        """, (appointment_id,))
+
+    conn.commit()
+    affected = cursor.rowcount
+    conn.close()
+
+    return affected > 0
+
+def get_available_slots(date):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if is_postgres():
+        cursor.execute(
+            """
+            SELECT time
+            FROM appointments
+            WHERE LOWER(date) = LOWER(%s)
+            AND status = 'confirmed'
+            """,
+            (date.strip(),)
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT time
+            FROM appointments
+            WHERE LOWER(date) = LOWER(?)
+            AND status = 'confirmed'
+            """,
+            (date.strip(),)
+        )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    booked_times = {
+        normalize_time(str(row[0]))
+        for row in rows
+    }
+
+    available_slots = []
+
+    # 10:00 AM → 12:30 PM
+    for hour in range(10, 13):
+        for minute in (0, 30):
+            slot = f"{hour:02d}:{minute:02d}"
+
+            formatted_slot = datetime.strptime(
+                slot, "%H:%M"
+            ).strftime("%I:%M %p").lstrip("0")
+
+            if formatted_slot not in booked_times:
+                available_slots.append(formatted_slot)
+
+    # 2:00 PM → 8:00 PM
+    for hour in range(14, 21):
+        for minute in (0, 30):
+            slot = f"{hour:02d}:{minute:02d}"
+
+            formatted_slot = datetime.strptime(
+                slot, "%H:%M"
+            ).strftime("%I:%M %p").lstrip("0")
+
+            if formatted_slot not in booked_times:
+                available_slots.append(formatted_slot)
+
+    return available_slots

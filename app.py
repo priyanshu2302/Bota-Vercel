@@ -250,6 +250,19 @@ def book_appointment(data: AppointmentRequest):
         "appointment": saved,
     }
 
+@app.post("/admin/add-appointment")
+def admin_add_appointment(data: AppointmentRequest, request: Request):
+    require_admin(request)
+
+    saved, error = add_appointment(data.model_dump())
+
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    return {
+        "message": "Offline appointment added successfully ✅",
+        "appointment": saved,
+    }
 
 # ============================================================
 # PROTECTED ADMIN ROUTES
@@ -283,6 +296,27 @@ def cancel_appointment(appointment_id: int, request: Request):
     if not success:
         raise HTTPException(status_code=404, detail="Appointment not found")
     return {"message": "Appointment cancelled ✅"}
+
+@app.delete("/appointments/{appointment_id}/permanent")
+def permanently_delete_appointment(
+    appointment_id: int,
+    request: Request
+):
+    require_admin(request)
+
+    from database import permanently_delete_appointment
+
+    success = permanently_delete_appointment(appointment_id)
+
+    if not success:
+        raise HTTPException(
+            status_code=404,
+            detail="Appointment not found"
+        )
+
+    return {
+        "message": "Appointment permanently deleted 🗑️"
+    }
 
 
 @app.get("/appointments/export")
@@ -329,3 +363,14 @@ def export_appointments(request: Request):
             "Content-Disposition": "attachment; filename=bota_appointments.csv"
         },
     )
+
+@app.get("/available-slots")
+def available_slots(date: str):
+    from database import get_available_slots
+
+    slots = get_available_slots(date)
+
+    return {
+        "date": date,
+        "slots": slots
+    }

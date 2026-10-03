@@ -1,1710 +1,2145 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bota Admin Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<style>
-  :root {
-    --teal: #2ec4a0;
-    --teal-dark: #1aab8a;
-    --teal-light: #e8faf5;
-    --teal-mid: #b2ede0;
-    --sidebar-w: 200px;
-    --bg: #f4faf8;
-    --surface: #ffffff;
-    --border: #e0f0ea;
-    --text: #0a3d2e;
-    --text-muted: #5a8a7a;
-    --confirmed: #2ec4a0;
-    --pending: #f5a623;
-    --cancelled: #e74c3c;
-    --radius: 16px;
-    --shadow: 0 2px 16px rgba(0,160,120,0.08);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ── LOGIN SCREEN ── */
-  #loginScreen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #b2ede0 0%, #e8faf5 100%);
-  }
-
-  .login-card {
-    background: white;
-    border-radius: 24px;
-    padding: 48px 40px;
-    width: min(400px, 90vw);
-    box-shadow: 0 8px 40px rgba(0,160,120,0.15);
-    text-align: center;
-  }
-
-  .login-logo {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    margin: 0 auto 20px;
-    box-shadow: 0 4px 16px rgba(0,160,120,0.3);
-  }
-
-  .login-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-
-  .login-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 32px;
-  }
-
-  .login-input {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-    margin-bottom: 14px;
-    transition: border-color 0.2s;
-    background: var(--teal-light);
-  }
-
-  .login-input:focus { border-color: var(--teal); }
-
-  .login-btn {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 14px rgba(0,160,120,0.3);
-  }
-
-  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,160,120,0.4); }
-  .login-btn:active { transform: scale(0.98); }
-
-  .login-error {
-    color: #e74c3c;
-    font-size: 13px;
-    margin-top: 10px;
-    display: none;
-  }
-
-  /* ── MAIN DASHBOARD ── */
-  #dashboard { display: none; min-height: 100vh; }
-
-  /* LAYOUT */
-  .layout {
-    display: flex;
-    min-height: 100vh;
-  }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: var(--sidebar-w);
-    background: white;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 100;
-    box-shadow: 2px 0 16px rgba(0,160,120,0.06);
-    transition: transform 0.3s ease;
-  }
-
-  .sidebar-logo {
-    padding: 24px 20px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .sidebar-logo-icon {
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .sidebar-logo-text { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
-  .sidebar-logo-sub { font-size: 10.5px; color: var(--text-muted); font-weight: 400; }
-
-  .sidebar-nav { flex: 1; padding: 16px 12px; }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 14px;
-    border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 4px;
-  }
-
-  .nav-item:hover { background: var(--teal-light); color: var(--teal-dark); }
-
-  .nav-item.active {
-    background: linear-gradient(135deg, rgba(61,217,179,0.15), rgba(26,171,138,0.1));
-    color: var(--teal-dark);
-    font-weight: 600;
-    border-left: 3px solid var(--teal);
-  }
-
-  .nav-icon { font-size: 17px; width: 22px; text-align: center; }
-
-  .sidebar-footer {
-    padding: 16px 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .logout-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 14px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #e74c3c;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-    border: none;
-    background: none;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .logout-btn:hover { background: #fdf0f0; }
-
-  /* ── MAIN CONTENT ── */
-  .main {
-    margin-left: var(--sidebar-w);
-    flex: 1;
-    padding: 28px 28px 40px;
-    min-width: 0;
-  }
-
-  /* PAGE HEADER */
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .page-title { font-size: 24px; font-weight: 700; color: var(--text); }
-  .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-
-  .header-right { display: flex; align-items: center; gap: 12px; }
-
-  .date-badge {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .refresh-btn {
-    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 9px 16px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .refresh-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,160,120,0.3); }
-
-  /* ── STAT CARDS ── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    padding: 22px 20px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    transition: transform 0.2s;
-  }
-
-  .stat-card:hover { transform: translateY(-2px); }
-
-  .stat-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
-  }
-
-  .stat-icon.teal { background: linear-gradient(135deg, rgba(61,217,179,0.2), rgba(26,171,138,0.1)); }
-  .stat-icon.orange { background: rgba(245,166,35,0.12); }
-  .stat-icon.blue { background: rgba(52,152,219,0.12); }
-
-  .stat-info { flex: 1; min-width: 0; }
-  .stat-label { font-size: 12.5px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
-  .stat-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
-  .stat-sub { font-size: 11.5px; color: var(--teal); font-weight: 500; margin-top: 4px; }
-
-  /* ── MIDDLE ROW ── */
-  .middle-row {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  /* BOOKING LIST */
-  .booking-list-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .card-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .card-badge {
-    background: var(--teal-light);
-    color: var(--teal-dark);
-    border-radius: 20px;
-    padding: 3px 10px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .booking-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
-
-  .booking-item {
-    padding: 12px 14px;
-    border-radius: 12px;
-    border-left: 4px solid transparent;
-    background: var(--teal-light);
-    transition: all 0.2s;
-  }
-
-  .booking-item:hover { transform: translateX(3px); }
-  .booking-item.confirmed { border-left-color: var(--confirmed); background: rgba(46,196,160,0.08); }
-  .booking-item.pending { border-left-color: var(--pending); background: rgba(245,166,35,0.08); }
-  .booking-item.cancelled { border-left-color: var(--cancelled); background: rgba(231,76,60,0.06); }
-
-  .booking-item-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
-  .booking-item-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .booking-item-status {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-top: 4px;
-    text-transform: capitalize;
-  }
-
-  .status-confirmed { background: rgba(46,196,160,0.15); color: var(--confirmed); }
-  .status-pending { background: rgba(245,166,35,0.15); color: var(--pending); }
-  .status-cancelled { background: rgba(231,76,60,0.12); color: var(--cancelled); }
-
-  /* MINI CALENDAR */
-  .calendar-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .cal-header {
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .cal-title { font-size: 14px; font-weight: 600; color: var(--text); }
-
-  .cal-nav {
-    display: flex;
-    gap: 4px;
-  }
-
-  .cal-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--text-muted);
-    transition: all 0.2s;
-  }
-
-  .cal-btn:hover { background: var(--teal-light); color: var(--teal-dark); }
-
-  .cal-grid { padding: 12px 14px; }
-
-  .cal-days-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 6px;
-  }
-
-  .cal-day-name {
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 4px 0;
-  }
-
-  .cal-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-
-  .cal-day {
-    text-align: center;
-    padding: 6px 2px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-    min-height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-
-  .cal-day:hover { background: var(--teal-light); }
-  .cal-day.today { background: linear-gradient(135deg, #3dd9b3, #1aab8a); color: white; font-weight: 700; }
-  .cal-day.has-booking::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    background: var(--teal);
-    border-radius: 50%;
-  }
-  .cal-day.today::after { background: white; }
-  .cal-day.other-month { color: var(--text-muted); opacity: 0.4; }
-
-  /* ── SEARCH BAR ── */
-  .search-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-
-  .search-wrap {
-    flex: 1;
-    min-width: 200px;
-    background: white;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    gap: 10px;
-    transition: border-color 0.2s;
-  }
-
-  .search-wrap:focus-within { border-color: var(--teal); }
-  .search-icon { font-size: 16px; color: var(--text-muted); }
-
-  .search-wrap input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13.5px;
-    color: var(--text);
-    padding: 11px 0;
-    background: transparent;
-  }
-
-  .search-wrap input::placeholder { color: var(--text-muted); }
-
-  .filter-select {
-    padding: 11px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: var(--text);
-    background: white;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-
-  .filter-select:focus { border-color: var(--teal); }
-
-  /* ── BOOKINGS TABLE ── */
-  .table-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    margin-bottom: 24px;
-  }
-
-  .table-wrap { overflow-x: auto; }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-  }
-
-  thead tr { background: var(--teal-light); }
-
-  th {
-    padding: 13px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--teal-dark);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 13px 16px;
-    font-size: 13.5px;
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: var(--teal-light); }
-
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: capitalize;
-  }
-
-  .pill-confirmed { background: rgba(46,196,160,0.15); color: #0a7a5e; }
-  .pill-cancelled { background: rgba(231,76,60,0.12); color: #c0392b; }
-
-  .cancel-btn {
-    background: rgba(231,76,60,0.08);
-    color: #e74c3c;
-    border: 1px solid rgba(231,76,60,0.2);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .cancel-btn:hover { background: rgba(231,76,60,0.15); transform: scale(1.03); }
-  .cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text-muted);
-  }
-
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-text { font-size: 14px; }
-
-  /* ── CHARTS ROW ── */
-  .charts-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .chart-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    padding: 20px;
-  }
-
-  .chart-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
-  .chart-wrap { position: relative; height: 200px; }
-
-  /* ── MOBILE SIDEBAR TOGGLE ── */
-  .mobile-header {
-    display: none; /* hidden on desktop */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 56px;
-    background: white;
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-    padding: 0 16px;
-    gap: 12px;
-    z-index: 200;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
-
-  .hamburger {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .mobile-title { font-size: 15px; font-weight: 700; color: var(--text); }
-
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 99;
-  }
-
-  /* ══════════════════════════════
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bota Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --teal: #2ec4a0;
+      --teal-dark: #1aab8a;
+      --teal-light: #e8faf5;
+      --teal-mid: #b2ede0;
+      --sidebar-w: 200px;
+      --bg: #f4faf8;
+      --surface: #ffffff;
+      --border: #e0f0ea;
+      --text: #0a3d2e;
+      --text-muted: #5a8a7a;
+      --confirmed: #2ec4a0;
+      --pending: #f5a623;
+      --cancelled: #e74c3c;
+      --radius: 16px;
+      --shadow: 0 2px 16px rgba(0, 160, 120, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #b2ede0 0%, #e8faf5 100%);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: min(400px, 90vw);
+      box-shadow: 0 8px 40px rgba(0, 160, 120, 0.15);
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 16px rgba(0, 160, 120, 0.3);
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+      background: var(--teal-light);
+    }
+
+    .login-input:focus {
+      border-color: var(--teal);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 160, 120, 0.3);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 160, 120, 0.4);
+    }
+
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+
+    .login-error {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── MAIN DASHBOARD ── */
+    #dashboard {
+      display: none;
+      min-height: 100vh;
+    }
+
+    /* LAYOUT */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: white;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      box-shadow: 2px 0 16px rgba(0, 160, 120, 0.06);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-logo-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .sidebar-logo-sub {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(61, 217, 179, 0.15), rgba(26, 171, 138, 0.1));
+      color: var(--teal-dark);
+      font-weight: 600;
+      border-left: 3px solid var(--teal);
+    }
+
+    .nav-icon {
+      font-size: 17px;
+      width: 22px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e74c3c;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .logout-btn:hover {
+      background: #fdf0f0;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 28px 28px 40px;
+      min-width: 0;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .date-badge {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .refresh-btn {
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .refresh-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 160, 120, 0.3);
+    }
+
+    /* ── STAT CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.teal {
+      background: linear-gradient(135deg, rgba(61, 217, 179, 0.2), rgba(26, 171, 138, 0.1));
+    }
+
+    .stat-icon.orange {
+      background: rgba(245, 166, 35, 0.12);
+    }
+
+    .stat-icon.blue {
+      background: rgba(52, 152, 219, 0.12);
+    }
+
+    .stat-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .stat-label {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 11.5px;
+      color: var(--teal);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    /* ── MIDDLE ROW ── */
+    .middle-row {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* BOOKING LIST */
+    .booking-list-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-badge {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .booking-list {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .booking-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border-left: 4px solid transparent;
+      background: var(--teal-light);
+      transition: all 0.2s;
+    }
+
+    .booking-item:hover {
+      transform: translateX(3px);
+    }
+
+    .booking-item.confirmed {
+      border-left-color: var(--confirmed);
+      background: rgba(46, 196, 160, 0.08);
+    }
+
+    .booking-item.pending {
+      border-left-color: var(--pending);
+      background: rgba(245, 166, 35, 0.08);
+    }
+
+    .booking-item.cancelled {
+      border-left-color: var(--cancelled);
+      background: rgba(231, 76, 60, 0.06);
+    }
+
+    .booking-item-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .booking-item-time {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .booking-item-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 4px;
+      text-transform: capitalize;
+    }
+
+    .status-confirmed {
+      background: rgba(46, 196, 160, 0.15);
+      color: var(--confirmed);
+    }
+
+    .status-pending {
+      background: rgba(245, 166, 35, 0.15);
+      color: var(--pending);
+    }
+
+    .status-cancelled {
+      background: rgba(231, 76, 60, 0.12);
+      color: var(--cancelled);
+    }
+
+    /* MINI CALENDAR */
+    .calendar-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .cal-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .cal-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .cal-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .cal-btn:hover {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+    }
+
+    .cal-grid {
+      padding: 12px 14px;
+    }
+
+    .cal-days-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+    }
+
+    .cal-day-name {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 4px 0;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-day {
+      text-align: center;
+      padding: 6px 2px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .cal-day:hover {
+      background: var(--teal-light);
+    }
+
+    .cal-day.today {
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      color: white;
+      font-weight: 700;
+    }
+
+    .cal-day.has-booking::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: var(--teal);
+      border-radius: 50%;
+    }
+
+    .cal-day.today::after {
+      background: white;
+    }
+
+    .cal-day.other-month {
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap:focus-within {
+      border-color: var(--teal);
+    }
+
+    .search-icon {
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    .search-wrap input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      color: var(--text);
+      padding: 11px 0;
+      background: transparent;
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .filter-select {
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: white;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      border-color: var(--teal);
+    }
+
+    /* ── BOOKINGS TABLE ── */
+    .table-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    thead tr {
+      background: var(--teal-light);
+    }
+
+    th {
+      padding: 13px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--teal-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 13px 16px;
+      font-size: 13.5px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--teal-light);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .pill-confirmed {
+      background: rgba(46, 196, 160, 0.15);
+      color: #0a7a5e;
+    }
+
+    .pill-cancelled {
+      background: rgba(231, 76, 60, 0.12);
+      color: #c0392b;
+    }
+
+    .cancel-btn {
+      background: rgba(231, 76, 60, 0.08);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .cancel-btn:hover {
+      background: rgba(231, 76, 60, 0.15);
+      transform: scale(1.03);
+    }
+
+    .cancel-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+    }
+
+    /* ── CHARTS ROW ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 200px;
+    }
+
+    /* ── MOBILE SIDEBAR TOGGLE ── */
+    .mobile-header {
+      display: none;
+      /* hidden on desktop */
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .hamburger {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .mobile-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 99;
+    }
+
+    /* ══════════════════════════════
      RESPONSIVE BREAKPOINTS
      ══════════════════════════════ */
 
-  /* ── LARGE TABLET (below 1024px) ── */
-  @media (max-width: 1024px) {
-    .middle-row { grid-template-columns: 1fr; }
-    .calendar-card { display: none; }
-    .charts-row { grid-template-columns: 1fr; }
-  }
+    /* ── LARGE TABLET (below 1024px) ── */
+    @media (max-width: 1024px) {
+      .middle-row {
+        grid-template-columns: 1fr;
+      }
 
-  /* ── TABLET (below 900px) ── */
-  @media (max-width: 900px) {
-    .stats-row { grid-template-columns: repeat(3, 1fr); }
-    .stat-icon { width: 42px; height: 42px; font-size: 20px; }
-  }
+      .calendar-card {
+        display: none;
+      }
 
-  /* ── MOBILE (below 768px) — sidebar collapses ── */
-  @media (max-width: 768px) {
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+    }
 
-    /* Show mobile top header bar */
-    .mobile-header { display: flex; }
+    /* ── TABLET (below 900px) ── */
+    @media (max-width: 900px) {
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
 
-    /* Sidebar slides off to the left — only shows when .open */
-    .sidebar {
-      transform: translateX(-100%);
+      .stat-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+      }
+    }
+
+    /* ── MOBILE (below 768px) — sidebar collapses ── */
+    @media (max-width: 768px) {
+
+      /* Show mobile top header bar */
+      .mobile-header {
+        display: flex;
+      }
+
+      /* Sidebar slides off to the left — only shows when .open */
+      .sidebar {
+        transform: translateX(-100%);
+        z-index: 300;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      /* Dark overlay behind sidebar */
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      /* ALL page main areas — full width, push below top bar */
+      .main,
+      #patientsPage .main,
+      #calendarPage .main {
+        margin-left: 0 !important;
+        padding: 72px 14px 40px !important;
+      }
+
+      /* Stats */
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 16px 14px;
+        gap: 12px;
+      }
+
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .stat-label {
+        font-size: 11.5px;
+      }
+
+      /* Page header */
+      .page-title {
+        font-size: 20px;
+      }
+
+      .page-sub {
+        font-size: 12px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .date-badge {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+      /* Table — horizontal scroll */
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table {
+        min-width: 580px;
+      }
+
+      td,
+      th {
+        padding: 10px 12px;
+        font-size: 12.5px;
+      }
+
+      /* Booking list */
+      .booking-list {
+        max-height: 220px;
+      }
+
+      /* Full calendar on mobile */
+      .full-cal-cell {
+        min-height: 64px;
+        padding: 5px;
+      }
+
+      .full-cal-day-name {
+        font-size: 9px;
+        padding: 6px 1px;
+        letter-spacing: 0;
+      }
+
+      .full-cal-date {
+        font-size: 11px;
+        width: 22px;
+        height: 22px;
+      }
+
+      .full-cal-title {
+        font-size: 15px;
+      }
+
+      /* Slide panel full width on mobile */
+      .slide-panel {
+        width: 88%;
+      }
+
+      /* Search on mobile */
+      .search-row {
+        flex-direction: column;
+      }
+
+      .search-wrap {
+        width: 100% !important;
+        min-width: unset;
+      }
+
+      .filter-select {
+        width: 100%;
+      }
+
+      /* Charts smaller */
+      .chart-wrap {
+        height: 160px;
+      }
+    }
+
+    /* ── SMALL MOBILE (below 480px) ── */
+    @media (max-width: 480px) {
+
+      /* Stats — single column on very small screens */
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .stat-card {
+        padding: 14px 12px;
+      }
+
+      .stat-value {
+        font-size: 22px;
+      }
+
+      /* Header right — hide date badge, keep refresh */
+      .date-badge {
+        display: none;
+      }
+
+      /* Patients grid single column */
+      .patients-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Slide panel full screen */
+      .slide-panel {
+        width: 100%;
+        right: -100%;
+      }
+
+      /* Calendar pills hidden — too small */
+      .cal-appt-pill {
+        display: none;
+      }
+
+      .cal-more {
+        display: none;
+      }
+
+      .full-cal-cell {
+        min-height: 44px;
+        padding: 4px 3px;
+      }
+
+      .full-cal-day-name {
+        font-size: 8px;
+      }
+
+      /* Cards */
+      .card-header {
+        padding: 14px 16px 12px;
+      }
+
+      .card-title {
+        font-size: 13.5px;
+      }
+
+      /* Table smaller text */
+      td,
+      th {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      /* Login card */
+      .login-card {
+        padding: 36px 24px;
+      }
+
+      .login-title {
+        font-size: 19px;
+      }
+
+      /* Sidebar width fits small screen */
+      .sidebar {
+        width: 80vw;
+      }
+    }
+
+    /* ── VERY SMALL (below 360px) ── */
+    @media (max-width: 360px) {
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .main,
+      #patientsPage .main,
+      #calendarPage .main {
+        padding: 68px 10px 32px !important;
+      }
+    }
+
+    /* LOADING SPINNER */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0a3d2e;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: #0a7a5e;
+    }
+
+    .toast.error {
+      background: #c0392b;
+    }
+
+    /* ── PAGES ── */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* ── PATIENTS PAGE ── */
+    .patients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .patient-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .patient-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3dd9b3, #1aab8a);
+    }
+
+    .patient-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 160, 120, 0.12);
+      border-color: var(--teal);
+    }
+
+    .patient-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(61, 217, 179, 0.2), rgba(26, 171, 138, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+      border: 2px solid rgba(61, 217, 179, 0.3);
+    }
+
+    .patient-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .patient-meta {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .patient-stats {
+      display: flex;
+      gap: 10px;
+    }
+
+    .patient-stat {
+      flex: 1;
+      background: var(--teal-light);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .patient-stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--teal-dark);
+    }
+
+    .patient-stat-label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── FULL CALENDAR PAGE ── */
+    .full-cal-wrap {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .full-cal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .full-cal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .full-cal-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .full-cal-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .full-cal-nav-btn:hover {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+      border-color: var(--teal);
+    }
+
+    .full-cal-today-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1.5px solid var(--teal);
+      background: var(--teal-light);
+      color: var(--teal-dark);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .full-cal-today-btn:hover {
+      background: var(--teal);
+      color: white;
+    }
+
+    .full-cal-days-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .full-cal-day-name {
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .full-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .full-cal-cell {
+      min-height: 110px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .full-cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .full-cal-cell:hover {
+      background: var(--teal-light);
+    }
+
+    .full-cal-cell.other-month {
+      background: rgba(0, 0, 0, 0.015);
+      cursor: default;
+    }
+
+    .full-cal-cell.today {
+      background: rgba(61, 217, 179, 0.06);
+    }
+
+    .full-cal-date {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-bottom: 4px;
+    }
+
+    .full-cal-cell.today .full-cal-date {
+      background: linear-gradient(135deg, #3dd9b3, #1aab8a);
+      color: white;
+    }
+
+    .full-cal-cell.other-month .full-cal-date {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .cal-appt-pill {
+      background: linear-gradient(135deg, rgba(61, 217, 179, 0.2), rgba(26, 171, 138, 0.15));
+      border: 1px solid rgba(61, 217, 179, 0.3);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--teal-dark);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .cal-appt-pill.cancelled {
+      background: rgba(231, 76, 60, 0.06);
+      border-color: rgba(231, 76, 60, 0.2);
+      color: #c0392b;
+      text-decoration: line-through;
+    }
+
+    .cal-more {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding: 2px 4px;
+    }
+
+    /* ── SETTINGS PAGE ── */
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-row:last-of-type {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .settings-value {
+      font-size: 13.5px;
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* ── SLIDE PANEL ── */
+    .slide-panel-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
       z-index: 300;
-    }
-    .sidebar.open { transform: translateX(0); }
-
-    /* Dark overlay behind sidebar */
-    .sidebar-overlay.open { display: block; }
-
-    /* ALL page main areas — full width, push below top bar */
-    .main,
-    #patientsPage .main,
-    #calendarPage .main {
-      margin-left: 0 !important;
-      padding: 72px 14px 40px !important;
+      backdrop-filter: blur(2px);
     }
 
-    /* Stats */
-    .stats-row {
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    .slide-panel-overlay.open {
+      display: block;
     }
-    .stat-card { padding: 16px 14px; gap: 12px; }
-    .stat-icon { width: 40px; height: 40px; font-size: 18px; }
-    .stat-value { font-size: 24px; }
-    .stat-label { font-size: 11.5px; }
 
-    /* Page header */
-    .page-title { font-size: 20px; }
-    .page-sub { font-size: 12px; }
-    .page-header {
+    .slide-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      height: 100vh;
+      background: white;
+      box-shadow: -4px 0 32px rgba(0, 0, 0, 0.12);
+      z-index: 301;
+      display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 20px;
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
     }
-    .header-right { width: 100%; justify-content: flex-end; }
-    .date-badge { font-size: 12px; padding: 6px 10px; }
 
-    /* Table — horizontal scroll */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { min-width: 580px; }
-    td, th { padding: 10px 12px; font-size: 12.5px; }
-
-    /* Booking list */
-    .booking-list { max-height: 220px; }
-
-    /* Full calendar on mobile */
-    .full-cal-cell { min-height: 64px; padding: 5px; }
-    .full-cal-day-name { font-size: 9px; padding: 6px 1px; letter-spacing: 0; }
-    .full-cal-date { font-size: 11px; width: 22px; height: 22px; }
-    .full-cal-title { font-size: 15px; }
-
-    /* Slide panel full width on mobile */
-    .slide-panel { width: 88%; }
-
-    /* Search on mobile */
-    .search-row { flex-direction: column; }
-    .search-wrap { width: 100% !important; min-width: unset; }
-    .filter-select { width: 100%; }
-
-    /* Charts smaller */
-    .chart-wrap { height: 160px; }
-  }
-
-  /* ── SMALL MOBILE (below 480px) ── */
-  @media (max-width: 480px) {
-    /* Stats — single column on very small screens */
-    .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .stat-card { padding: 14px 12px; }
-    .stat-value { font-size: 22px; }
-
-    /* Header right — hide date badge, keep refresh */
-    .date-badge { display: none; }
-
-    /* Patients grid single column */
-    .patients-grid { grid-template-columns: 1fr; }
-
-    /* Slide panel full screen */
-    .slide-panel { width: 100%; right: -100%; }
-
-    /* Calendar pills hidden — too small */
-    .cal-appt-pill { display: none; }
-    .cal-more { display: none; }
-    .full-cal-cell { min-height: 44px; padding: 4px 3px; }
-    .full-cal-day-name { font-size: 8px; }
-
-    /* Cards */
-    .card-header { padding: 14px 16px 12px; }
-    .card-title { font-size: 13.5px; }
-
-    /* Table smaller text */
-    td, th { padding: 8px 10px; font-size: 12px; }
-
-    /* Login card */
-    .login-card { padding: 36px 24px; }
-    .login-title { font-size: 19px; }
-
-    /* Sidebar width fits small screen */
-    .sidebar { width: 80vw; }
-  }
-
-  /* ── VERY SMALL (below 360px) ── */
-  @media (max-width: 360px) {
-    .stats-row { grid-template-columns: 1fr; }
-    .main,
-    #patientsPage .main,
-    #calendarPage .main {
-      padding: 68px 10px 32px !important;
+    .slide-panel.open {
+      right: 0;
     }
-  }
 
-  /* LOADING SPINNER */
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255,255,255,0.4);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+    .slide-panel-header {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(61, 217, 179, 0.08), rgba(26, 171, 138, 0.04));
+      flex-shrink: 0;
+    }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
+    .slide-panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
 
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #0a3d2e;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 500;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    z-index: 999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
+    .slide-panel-sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
 
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { background: #0a7a5e; }
-  .toast.error { background: #c0392b; }
+    .slide-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
 
-  /* ── PAGES ── */
-  .page { display: none; }
-  .page.active { display: block; }
+    .slide-close:hover {
+      background: #fdf0f0;
+      color: #e74c3c;
+      border-color: rgba(231, 76, 60, 0.3);
+    }
 
-  /* ── PATIENTS PAGE ── */
-  .patients-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
-  }
+    .slide-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
 
-  .patient-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
+    .slide-panel-body::-webkit-scrollbar {
+      width: 4px;
+    }
 
-  .patient-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #3dd9b3, #1aab8a);
-  }
+    .slide-panel-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
 
-  .patient-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,160,120,0.12);
-    border-color: var(--teal);
-  }
+    .slide-appt-card {
+      background: var(--teal-light);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--teal);
+      transition: all 0.2s;
+    }
 
-  .patient-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(61,217,179,0.2), rgba(26,171,138,0.1));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    margin-bottom: 12px;
-    border: 2px solid rgba(61,217,179,0.3);
-  }
+    .slide-appt-card.cancelled-card {
+      border-left-color: var(--cancelled);
+      background: rgba(231, 76, 60, 0.04);
+    }
 
-  .patient-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
+    .slide-appt-card:hover {
+      transform: translateX(3px);
+    }
 
-  .patient-meta {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
+    .slide-appt-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-  .patient-stats {
-    display: flex;
-    gap: 10px;
-  }
+    .slide-appt-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
 
-  .patient-stat {
-    flex: 1;
-    background: var(--teal-light);
-    border-radius: 10px;
-    padding: 8px 10px;
-    text-align: center;
-  }
+    .slide-appt-row span:first-child {
+      width: 18px;
+      flex-shrink: 0;
+    }
 
-  .patient-stat-val {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--teal-dark);
-  }
+    @media (max-width: 480px) {
+      .slide-panel {
+        width: 100%;
+        right: -100%;
+      }
 
-  .patient-stat-label {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
+      .patients-grid {
+        grid-template-columns: 1fr;
+      }
 
-  /* ── FULL CALENDAR PAGE ── */
-  .full-cal-wrap {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    margin-top: 20px;
-  }
+      .full-cal-cell {
+        min-height: 60px;
+      }
 
-  .full-cal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .full-cal-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .full-cal-nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .full-cal-nav-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-    background: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: var(--text-muted);
-    transition: all 0.2s;
-  }
-
-  .full-cal-nav-btn:hover {
-    background: var(--teal-light);
-    color: var(--teal-dark);
-    border-color: var(--teal);
-  }
-
-  .full-cal-today-btn {
-    padding: 8px 16px;
-    border-radius: 10px;
-    border: 1.5px solid var(--teal);
-    background: var(--teal-light);
-    color: var(--teal-dark);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .full-cal-today-btn:hover {
-    background: var(--teal);
-    color: white;
-  }
-
-  .full-cal-days-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .full-cal-day-name {
-    padding: 12px 8px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .full-cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-  }
-
-  .full-cal-cell {
-    min-height: 110px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 8px;
-    cursor: pointer;
-    transition: background 0.15s;
-    position: relative;
-  }
-
-  .full-cal-cell:nth-child(7n) { border-right: none; }
-  .full-cal-cell:hover { background: var(--teal-light); }
-
-  .full-cal-cell.other-month {
-    background: rgba(0,0,0,0.015);
-    cursor: default;
-  }
-
-  .full-cal-cell.today {
-    background: rgba(61,217,179,0.06);
-  }
-
-  .full-cal-date {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-bottom: 4px;
-  }
-
-  .full-cal-cell.today .full-cal-date {
-    background: linear-gradient(135deg, #3dd9b3, #1aab8a);
-    color: white;
-  }
-
-  .full-cal-cell.other-month .full-cal-date {
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  .cal-appt-pill {
-    background: linear-gradient(135deg, rgba(61,217,179,0.2), rgba(26,171,138,0.15));
-    border: 1px solid rgba(61,217,179,0.3);
-    border-radius: 6px;
-    padding: 3px 7px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--teal-dark);
-    margin-bottom: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-  }
-
-  .cal-appt-pill.cancelled {
-    background: rgba(231,76,60,0.06);
-    border-color: rgba(231,76,60,0.2);
-    color: #c0392b;
-    text-decoration: line-through;
-  }
-
-  .cal-more {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-    padding: 2px 4px;
-  }
-
-  /* ── SETTINGS PAGE ── */
-  .settings-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .settings-row:last-of-type { border-bottom: none; }
-  .settings-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-  .settings-value { font-size: 13.5px; color: var(--text); font-weight: 600; text-align: right; }
-
-  /* ── SLIDE PANEL ── */
-  .slide-panel-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 300;
-    backdrop-filter: blur(2px);
-  }
-
-  .slide-panel-overlay.open { display: block; }
-
-  .slide-panel {
-    position: fixed;
-    top: 0;
-    right: -420px;
-    width: 400px;
-    height: 100vh;
-    background: white;
-    box-shadow: -4px 0 32px rgba(0,0,0,0.12);
-    z-index: 301;
-    display: flex;
-    flex-direction: column;
-    transition: right 0.35s cubic-bezier(0.16,1,0.3,1);
-    overflow: hidden;
-  }
-
-  .slide-panel.open { right: 0; }
-
-  .slide-panel-header {
-    padding: 22px 20px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(135deg, rgba(61,217,179,0.08), rgba(26,171,138,0.04));
-    flex-shrink: 0;
-  }
-
-  .slide-panel-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .slide-panel-sub {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    margin-top: 3px;
-  }
-
-  .slide-close {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    color: var(--text-muted);
-    transition: all 0.2s;
-    flex-shrink: 0;
-  }
-
-  .slide-close:hover { background: #fdf0f0; color: #e74c3c; border-color: rgba(231,76,60,0.3); }
-
-  .slide-panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .slide-panel-body::-webkit-scrollbar { width: 4px; }
-  .slide-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .slide-appt-card {
-    background: var(--teal-light);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border-left: 4px solid var(--teal);
-    transition: all 0.2s;
-  }
-
-  .slide-appt-card.cancelled-card {
-    border-left-color: var(--cancelled);
-    background: rgba(231,76,60,0.04);
-  }
-
-  .slide-appt-card:hover { transform: translateX(3px); }
-
-  .slide-appt-name {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .slide-appt-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .slide-appt-row span:first-child { width: 18px; flex-shrink: 0; }
-
-  @media (max-width: 480px) {
-    .slide-panel { width: 100%; right: -100%; }
-    .patients-grid { grid-template-columns: 1fr; }
-    .full-cal-cell { min-height: 60px; }
-    .cal-appt-pill { display: none; }
-  }
-</style>
+      .cal-appt-pill {
+        display: none;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ── LOGIN SCREEN ── -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="login-logo">🦷</div>
-    <div class="login-title">Admin Login</div>
-    <div class="login-sub" id="loginClinicName">Staff Access</div>
-    <input class="login-input" type="text" id="loginUser" placeholder="Username" autocomplete="off"/>
-    <input class="login-input" type="password" id="loginPass" placeholder="Password"
-      onkeydown="if(event.key==='Enter') doLogin()"/>
-    <button class="login-btn" onclick="doLogin()">Login to Dashboard</button>
-    <div class="login-error" id="loginError">❌ Wrong username or password</div>
-  </div>
-</div>
-
-<!-- ── MAIN APP (hidden until login) ── -->
-<div id="appShell" style="display:none;">
-
-  <!-- Mobile Header — always visible on mobile -->
-  <div class="mobile-header">
-    <div class="hamburger" onclick="toggleSidebar()">☰</div>
-    <div class="mobile-title" id="mobileClinicName">🦷 Bota Admin</div>
+  <!-- ── LOGIN SCREEN ── -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">🦷</div>
+      <div class="login-title">Admin Login</div>
+      <div class="login-sub" id="loginClinicName">Staff Access</div>
+      <input class="login-input" type="text" id="loginUser" placeholder="Username" autocomplete="off" />
+      <input class="login-input" type="password" id="loginPass" placeholder="Password"
+        onkeydown="if(event.key==='Enter') doLogin()" />
+      <button class="login-btn" onclick="doLogin()">Login to Dashboard</button>
+      <div class="login-error" id="loginError">❌ Wrong username or password</div>
+    </div>
   </div>
 
-  <!-- Sidebar Overlay -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <!-- ── MAIN APP (hidden until login) ── -->
+  <div id="appShell" style="display:none;">
 
-  <!-- Global Sidebar — always present -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">🦷</div>
-      <div>
-        <div class="sidebar-logo-text">Bota Admin</div>
-        <div class="sidebar-logo-sub" id="sidebarClinicName">SmileCare Dental</div>
-      </div>
+    <!-- Mobile Header — always visible on mobile -->
+    <div class="mobile-header">
+      <div class="hamburger" onclick="toggleSidebar()">☰</div>
+      <div class="mobile-title" id="mobileClinicName">🦷 Bota Admin</div>
     </div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard', this)">
-        <span class="nav-icon">📊</span> Dashboard
-      </div>
-      <div class="nav-item" id="nav-patients" onclick="showPage('patients', this)">
-        <span class="nav-icon">👥</span> Patients
-      </div>
-      <div class="nav-item" id="nav-calendar" onclick="showPage('calendar', this)">
-        <span class="nav-icon">📅</span> Calendar
-      </div>
-      <div class="nav-item" id="nav-settings" onclick="showPage('settings', this)">
-        <span class="nav-icon">⚙️</span> Settings
-      </div>
-    </nav>
-    <div class="sidebar-footer">
-      <button class="logout-btn" onclick="doLogout()">
-        <span>🚪</span> Logout
-      </button>
-    </div>
-  </aside>
 
-  <!-- All pages sit here, sidebar-margin applied to each -->
-  <div id="dashboard">
-    <main class="main">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-      <!-- Page Header -->
-      <div class="page-header">
+    <!-- Global Sidebar — always present -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🦷</div>
         <div>
-          <div class="page-title">Booking Dashboard</div>
-          <div class="page-sub" id="pageHeaderClinicName">All appointments</div>
-        </div>
-        <div class="header-right">
-          <div class="date-badge" id="todayDate">—</div>
-          <button class="refresh-btn" onclick="loadData()">
-            🔄 Refresh
-          </button>
+          <div class="sidebar-logo-text">Bota Admin</div>
+          <div class="sidebar-logo-sub" id="sidebarClinicName">SmileCare Dental</div>
         </div>
       </div>
-
-      <!-- Stat Cards -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-icon teal">📋</div>
-          <div class="stat-info">
-            <div class="stat-label">Total Bookings</div>
-            <div class="stat-value" id="statTotal">—</div>
-            <div class="stat-sub">All time</div>
-          </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard', this)">
+          <span class="nav-icon">📊</span> Dashboard
         </div>
-        <div class="stat-card">
-          <div class="stat-icon orange">📅</div>
-          <div class="stat-info">
-            <div class="stat-label">Today's Bookings</div>
-            <div class="stat-value" id="statToday">—</div>
-            <div class="stat-sub" id="statTodaySub">Loading...</div>
-          </div>
+        <div class="nav-item" id="nav-patients" onclick="showPage('patients', this)">
+          <span class="nav-icon">👥</span> Patients
         </div>
-        <div class="stat-card">
-          <div class="stat-icon blue">✅</div>
-          <div class="stat-info">
-            <div class="stat-label">Confirmed</div>
-            <div class="stat-value" id="statConfirmed">—</div>
-            <div class="stat-sub">Active bookings</div>
-          </div>
+        <div class="nav-item" id="nav-calendar" onclick="showPage('calendar', this)">
+          <span class="nav-icon">📅</span> Calendar
         </div>
+        <div class="nav-item" id="nav-settings" onclick="showPage('settings', this)">
+          <span class="nav-icon">⚙️</span> Settings
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">
+          <span>🚪</span> Logout
+        </button>
       </div>
+    </aside>
 
-      <!-- Middle Row: Booking List + Calendar -->
-      <div class="middle-row">
+    <!-- All pages sit here, sidebar-margin applied to each -->
+    <div id="dashboard">
+      <main class="main">
 
-        <!-- Today's Booking List -->
-        <div class="booking-list-card">
-          <div class="card-header">
-            <div class="card-title">📋 Today's Appointments</div>
-            <div class="card-badge" id="todayCount">0</div>
+        <!-- Page Header -->
+        <div class="page-header">
+          <div>
+            <div class="page-title">Booking Dashboard</div>
+            <div class="page-sub" id="pageHeaderClinicName">All appointments</div>
           </div>
-          <div class="booking-list" id="todayList">
-            <div class="empty-state">
-              <div class="empty-icon">📭</div>
-              <div class="empty-text">No appointments today</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mini Calendar -->
-        <div class="calendar-card">
-          <div class="cal-header">
-            <div class="cal-title" id="calMonthTitle">—</div>
-            <div class="cal-nav">
-              <button class="cal-btn" onclick="changeMonth(-1)">‹</button>
-              <button class="cal-btn" onclick="changeMonth(1)">›</button>
-            </div>
-          </div>
-          <div class="cal-grid">
-            <div class="cal-days-header">
-              <div class="cal-day-name">Su</div>
-              <div class="cal-day-name">Mo</div>
-              <div class="cal-day-name">Tu</div>
-              <div class="cal-day-name">We</div>
-              <div class="cal-day-name">Th</div>
-              <div class="cal-day-name">Fr</div>
-              <div class="cal-day-name">Sa</div>
-            </div>
-            <div class="cal-days" id="calDays"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search + Filter -->
-      <div class="search-row">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Search by name..." id="searchInput" oninput="filterTable()"/>
-        </div>
-        <select class="filter-select" id="statusFilter" onchange="filterTable()">
-          <option value="all">All Status</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <!-- Bookings Table -->
-      <div class="table-card">
-        <div class="card-header">
-          <div class="card-title">All Bookings</div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="card-badge" id="tableCount">0</div>
-            <button class="refresh-btn" onclick="exportCSV()" style="background:linear-gradient(135deg,#4a90d9,#2f6fb8);">
-              ⬇ Export CSV
+          <div class="header-right">
+            <div class="date-badge" id="todayDate">—</div>
+            <button class="refresh-btn" onclick="loadData()">
+              🔄 Refresh
             </button>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Phone</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Service</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr>
-                <td colspan="9">
-                  <div class="empty-state">
-                    <div class="empty-icon">📭</div>
-                    <div class="empty-text">No bookings yet</div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Charts -->
-      <div class="charts-row">
-        <div class="chart-card">
-          <div class="chart-title">📊 Bookings by Service</div>
-          <div class="chart-wrap">
-            <canvas id="serviceChart"></canvas>
+        <!-- Stat Cards -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon teal">📋</div>
+            <div class="stat-info">
+              <div class="stat-label">Total Bookings</div>
+              <div class="stat-value" id="statTotal">—</div>
+              <div class="stat-sub">All time</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">📅</div>
+            <div class="stat-info">
+              <div class="stat-label">Today's Bookings</div>
+              <div class="stat-value" id="statToday">—</div>
+              <div class="stat-sub" id="statTodaySub">Loading...</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">✅</div>
+            <div class="stat-info">
+              <div class="stat-label">Confirmed</div>
+              <div class="stat-value" id="statConfirmed">—</div>
+              <div class="stat-sub">Active bookings</div>
+            </div>
           </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">📈 Booking Trend</div>
-          <div class="chart-wrap">
-            <canvas id="trendChart"></canvas>
+
+        <!-- Middle Row: Booking List + Calendar -->
+        <div class="middle-row">
+
+          <!-- Today's Booking List -->
+          <div class="booking-list-card">
+            <div class="card-header">
+              <div class="card-title">📋 Today's Appointments</div>
+              <div class="card-badge" id="todayCount">0</div>
+            </div>
+            <div class="booking-list" id="todayList">
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">No appointments today</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Calendar -->
+          <div class="calendar-card">
+            <div class="cal-header">
+              <div class="cal-title" id="calMonthTitle">—</div>
+              <div class="cal-nav">
+                <button class="cal-btn" onclick="changeMonth(-1)">‹</button>
+                <button class="cal-btn" onclick="changeMonth(1)">›</button>
+              </div>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-days-header">
+                <div class="cal-day-name">Su</div>
+                <div class="cal-day-name">Mo</div>
+                <div class="cal-day-name">Tu</div>
+                <div class="cal-day-name">We</div>
+                <div class="cal-day-name">Th</div>
+                <div class="cal-day-name">Fr</div>
+                <div class="cal-day-name">Sa</div>
+              </div>
+              <div class="cal-days" id="calDays"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search + Filter -->
+        <div class="search-row">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search by name..." id="searchInput" oninput="filterTable()" />
+          </div>
+          <select class="filter-select" id="statusFilter" onchange="filterTable()">
+            <option value="all">All Status</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="table-card">
+          <div class="card-header">
+            <div class="card-title">All Bookings</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="card-badge" id="tableCount">0</div>
+
+              <button class="refresh-btn" onclick="openOfflineAppointmentForm()"
+                style="background:linear-gradient(135deg,#20b486,#159a72);">
+                ➕ Add Appointment
+              </button>
+
+              <button class="refresh-btn" onclick="exportCSV()"
+                style="background:linear-gradient(135deg,#4a90d9,#2f6fb8);">
+                ⬇ Export CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Phone</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr>
+                  <td colspan="9">
+                    <div class="empty-state">
+                      <div class="empty-icon">📭</div>
+                      <div class="empty-text">No bookings yet</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">📊 Bookings by Service</div>
+            <div class="chart-wrap">
+              <canvas id="serviceChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📈 Booking Trend</div>
+            <div class="chart-wrap">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ── PATIENTS PAGE ── -->
+    <div id="patientsPage" style="display:none;">
+      <div class="main">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Patients</div>
+            <div class="page-sub">All registered patients and their history</div>
+          </div>
+          <div class="header-right">
+            <div class="search-wrap" style="width:240px;">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Search patients..." id="patientSearch" oninput="filterPatients()" />
+            </div>
+          </div>
+        </div>
+        <div class="patients-grid" id="patientsGrid">
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <div class="empty-text">No patients yet</div>
           </div>
         </div>
       </div>
+    </div>
 
-    </main>
-  </div>
-
-  <!-- ── PATIENTS PAGE ── -->
-  <div id="patientsPage" style="display:none;">
-    <div class="main">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Patients</div>
-        <div class="page-sub">All registered patients and their history</div>
-      </div>
-      <div class="header-right">
-        <div class="search-wrap" style="width:240px;">
-          <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Search patients..." id="patientSearch" oninput="filterPatients()"/>
+    <!-- ── CALENDAR PAGE ── -->
+    <div id="calendarPage" style="display:none;">
+      <div class="main">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Calendar</div>
+            <div class="page-sub">View appointments by date</div>
+          </div>
+          <div class="header-right">
+            <button class="full-cal-today-btn" onclick="goToToday()">Today</button>
+          </div>
+        </div>
+        <div class="full-cal-wrap">
+          <div class="full-cal-header">
+            <div class="full-cal-title" id="fullCalTitle">—</div>
+            <div class="full-cal-nav">
+              <button class="full-cal-nav-btn" onclick="fullCalChangeMonth(-1)">‹</button>
+              <button class="full-cal-nav-btn" onclick="fullCalChangeMonth(1)">›</button>
+            </div>
+          </div>
+          <div class="full-cal-days-header">
+            <div class="full-cal-day-name">Sunday</div>
+            <div class="full-cal-day-name">Monday</div>
+            <div class="full-cal-day-name">Tuesday</div>
+            <div class="full-cal-day-name">Wednesday</div>
+            <div class="full-cal-day-name">Thursday</div>
+            <div class="full-cal-day-name">Friday</div>
+            <div class="full-cal-day-name">Saturday</div>
+          </div>
+          <div class="full-cal-grid" id="fullCalGrid"></div>
         </div>
       </div>
     </div>
-    <div class="patients-grid" id="patientsGrid">
-      <div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No patients yet</div></div>
-    </div>
-    </div>
-  </div>
 
-  <!-- ── CALENDAR PAGE ── -->
-  <div id="calendarPage" style="display:none;">
-    <div class="main">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Calendar</div>
-        <div class="page-sub">View appointments by date</div>
-      </div>
-      <div class="header-right">
-        <button class="full-cal-today-btn" onclick="goToToday()">Today</button>
-      </div>
-    </div>
-    <div class="full-cal-wrap">
-      <div class="full-cal-header">
-        <div class="full-cal-title" id="fullCalTitle">—</div>
-        <div class="full-cal-nav">
-          <button class="full-cal-nav-btn" onclick="fullCalChangeMonth(-1)">‹</button>
-          <button class="full-cal-nav-btn" onclick="fullCalChangeMonth(1)">›</button>
+    <!-- ── SETTINGS PAGE ── -->
+    <div id="settingsPage" style="display:none;">
+      <div class="main">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Settings</div>
+            <div class="page-sub">Clinic information and account settings</div>
+          </div>
+        </div>
+
+        <!-- Clinic Info (read-only) -->
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">🏥 Clinic Information</div>
+          </div>
+          <div style="padding:20px;">
+            <div class="settings-row">
+              <span class="settings-label">Clinic Name</span>
+              <span class="settings-value" id="settingsClinicName">—</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Business Hours</span>
+              <span class="settings-value" id="settingsHours">—</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-top:14px;">
+              To update clinic details or hours, please contact your developer.
+            </p>
+          </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="table-card">
+          <div class="card-header">
+            <div class="card-title">🔐 Change Password</div>
+          </div>
+          <div style="padding:20px; max-width:360px;">
+            <input class="login-input" type="password" id="currentPassword" placeholder="Current password"
+              style="margin-bottom:12px;" />
+            <input class="login-input" type="password" id="newPassword" placeholder="New password"
+              style="margin-bottom:12px;" />
+            <input class="login-input" type="password" id="confirmPassword" placeholder="Confirm new password"
+              style="margin-bottom:14px;" />
+            <button class="refresh-btn" onclick="changePassword()" style="width:100%; justify-content:center;">
+              Update Password
+            </button>
+            <div class="login-error" id="passwordError"></div>
+          </div>
         </div>
       </div>
-      <div class="full-cal-days-header">
-        <div class="full-cal-day-name">Sunday</div>
-        <div class="full-cal-day-name">Monday</div>
-        <div class="full-cal-day-name">Tuesday</div>
-        <div class="full-cal-day-name">Wednesday</div>
-        <div class="full-cal-day-name">Thursday</div>
-        <div class="full-cal-day-name">Friday</div>
-        <div class="full-cal-day-name">Saturday</div>
-      </div>
-      <div class="full-cal-grid" id="fullCalGrid"></div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ── SETTINGS PAGE ── -->
-  <div id="settingsPage" style="display:none;">
-    <div class="main">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Settings</div>
-        <div class="page-sub">Clinic information and account settings</div>
-      </div>
     </div>
 
-    <!-- Clinic Info (read-only) -->
-    <div class="table-card" style="margin-bottom:20px;">
-      <div class="card-header">
-        <div class="card-title">🏥 Clinic Information</div>
-      </div>
-      <div style="padding:20px;">
-        <div class="settings-row">
-          <span class="settings-label">Clinic Name</span>
-          <span class="settings-value" id="settingsClinicName">—</span>
+    <!-- ── SLIDE PANEL ── -->
+    <div class="slide-panel-overlay" id="slidePanelOverlay" onclick="closeSlidePanel()"></div>
+    <div class="slide-panel" id="slidePanel">
+      <div class="slide-panel-header">
+        <div>
+          <div class="slide-panel-title" id="slidePanelTitle">Appointments</div>
+          <div class="slide-panel-sub" id="slidePanelSub">—</div>
         </div>
-        <div class="settings-row">
-          <span class="settings-label">Business Hours</span>
-          <span class="settings-value" id="settingsHours">—</span>
-        </div>
-        <p style="font-size:12.5px; color:var(--text-muted); margin-top:14px;">
-          To update clinic details or hours, please contact your developer.
-        </p>
+        <div class="slide-close" onclick="closeSlidePanel()">✕</div>
       </div>
+      <div class="slide-panel-body" id="slidePanelBody"></div>
     </div>
 
-    <!-- Change Password -->
-    <div class="table-card">
-      <div class="card-header">
-        <div class="card-title">🔐 Change Password</div>
-      </div>
-      <div style="padding:20px; max-width:360px;">
-        <input class="login-input" type="password" id="currentPassword" placeholder="Current password" style="margin-bottom:12px;"/>
-        <input class="login-input" type="password" id="newPassword" placeholder="New password" style="margin-bottom:12px;"/>
-        <input class="login-input" type="password" id="confirmPassword" placeholder="Confirm new password" style="margin-bottom:14px;"/>
-        <button class="refresh-btn" onclick="changePassword()" style="width:100%; justify-content:center;">
-          Update Password
-        </button>
-        <div class="login-error" id="passwordError"></div>
-      </div>
-    </div>
-    </div>
-  </div>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
-  <!-- ── SLIDE PANEL ── -->
-<div class="slide-panel-overlay" id="slidePanelOverlay" onclick="closeSlidePanel()"></div>
-<div class="slide-panel" id="slidePanel">
-  <div class="slide-panel-header">
-    <div>
-      <div class="slide-panel-title" id="slidePanelTitle">Appointments</div>
-      <div class="slide-panel-sub" id="slidePanelSub">—</div>
-    </div>
-    <div class="slide-close" onclick="closeSlidePanel()">✕</div>
-  </div>
-  <div class="slide-panel-body" id="slidePanelBody"></div>
-</div>
+  </div><!-- end appShell -->
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
+  <script>
+    const API_BASE = window.location.origin;
 
-</div><!-- end appShell -->
+    let allAppointments = [];
+    let calYear, calMonth;
+    let serviceChart, trendChart;
 
-<script>
-const API_BASE = window.location.origin;
+    // ── LOGIN — verified against server, credentials come from env vars per clinic ──
+    async function doLogin() {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const err = document.getElementById("loginError");
+      const btn = document.querySelector(".login-btn");
 
-let allAppointments = [];
-let calYear, calMonth;
-let serviceChart, trendChart;
+      if (!user || !pass) {
+        err.textContent = "❌ Please enter both username and password";
+        err.style.display = "block";
+        return;
+      }
 
-// ── LOGIN — verified against server, credentials come from env vars per clinic ──
-async function doLogin() {
-  const user = document.getElementById("loginUser").value.trim();
-  const pass = document.getElementById("loginPass").value.trim();
-  const err  = document.getElementById("loginError");
-  const btn  = document.querySelector(".login-btn");
+      const originalBtnText = btn.textContent;
+      btn.textContent = "Logging in...";
+      btn.disabled = true;
 
-  if (!user || !pass) {
-    err.textContent = "❌ Please enter both username and password";
-    err.style.display = "block";
-    return;
-  }
+      try {
+        const res = await fetch(`${API_BASE}/admin-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: user, password: pass })
+        });
 
-  const originalBtnText = btn.textContent;
-  btn.textContent = "Logging in...";
-  btn.disabled = true;
+        if (res.ok) {
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("appShell").style.display = "block";
+          err.style.display = "none";
+          initDashboard();
+        } else {
+          err.textContent = "❌ Wrong username or password";
+          err.style.display = "block";
+          document.getElementById("loginPass").value = "";
+          document.getElementById("loginPass").focus();
+        }
+      } catch (e) {
+        err.textContent = "❌ Could not connect to server. Please try again.";
+        err.style.display = "block";
+      }
 
-  try {
-    const res = await fetch(`${API_BASE}/admin-login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: user, password: pass })
-    });
+      btn.textContent = originalBtnText;
+      btn.disabled = false;
+    }
 
-    if (res.ok) {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("appShell").style.display = "block";
-      err.style.display = "none";
-      initDashboard();
-    } else {
-      err.textContent = "❌ Wrong username or password";
-      err.style.display = "block";
+    async function doLogout() {
+      try {
+        await fetch(`${API_BASE}/admin-logout`, { method: "POST" });
+      } catch (e) {
+        // Still return to the login screen if the logout request fails.
+      }
+
+      document.getElementById("appShell").style.display = "none";
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
-      document.getElementById("loginPass").focus();
     }
-  } catch (e) {
-    err.textContent = "❌ Could not connect to server. Please try again.";
-    err.style.display = "block";
-  }
 
-  btn.textContent = originalBtnText;
-  btn.disabled = false;
-}
-
-async function doLogout() {
-  try {
-    await fetch(`${API_BASE}/admin-logout`, { method: "POST" });
-  } catch (e) {
-    // Still return to the login screen if the logout request fails.
-  }
-
-  document.getElementById("appShell").style.display = "none";
-  document.getElementById("loginScreen").style.display = "flex";
-  document.getElementById("loginUser").value = "";
-  document.getElementById("loginPass").value = "";
-}
-
-// ── SIDEBAR TOGGLE (mobile) ──
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("sidebarOverlay").classList.toggle("open");
-}
-
-// ── NAV ──
-let fullCalYear, fullCalMonth;
-
-function showPage(page, navEl) {
-  // Update active nav
-  document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-  if (navEl) navEl.classList.add("active");
-  if (window.innerWidth <= 768) toggleSidebar();
-
-  // Hide all pages
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("patientsPage").style.display = "none";
-  document.getElementById("calendarPage").style.display = "none";
-  document.getElementById("settingsPage").style.display = "none";
-
-  if (page === "dashboard") {
-    document.getElementById("dashboard").style.display = "block";
-  } else if (page === "patients") {
-    document.getElementById("patientsPage").style.display = "block";
-    renderPatients();
-  } else if (page === "calendar") {
-    document.getElementById("calendarPage").style.display = "block";
-    const now = new Date();
-    if (!fullCalYear) { fullCalYear = now.getFullYear(); fullCalMonth = now.getMonth(); }
-    renderFullCalendar();
-  } else if (page === "settings") {
-    document.getElementById("settingsPage").style.display = "block";
-    loadSettingsInfo();
-  }
-}
-
-// ── PATIENTS PAGE ──
-let allPatients = [];
-
-function renderPatients(filter = "") {
-  const grid = document.getElementById("patientsGrid");
-
-  // Build unique patients from appointments
-  const patientMap = {};
-  allAppointments.forEach(a => {
-    const key = a.name.toLowerCase();
-    if (!patientMap[key]) {
-      patientMap[key] = {
-        name: a.name,
-        age: a.age || "—",
-        bookings: [],
-        lastDate: a.date
-      };
+    // ── SIDEBAR TOGGLE (mobile) ──
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("sidebarOverlay").classList.toggle("open");
     }
-    patientMap[key].bookings.push(a);
-    patientMap[key].lastDate = a.date;
-  });
 
-  allPatients = Object.values(patientMap);
+    // ── NAV ──
+    let fullCalYear, fullCalMonth;
 
-  const filtered = filter
-    ? allPatients.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
-    : allPatients;
+    function showPage(page, navEl) {
+      // Update active nav
+      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+      if (navEl) navEl.classList.add("active");
+      if (window.innerWidth <= 768) toggleSidebar();
 
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">${filter ? "No patients found" : "No patients yet"}</div></div>`;
-    return;
-  }
+      // Hide all pages
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("patientsPage").style.display = "none";
+      document.getElementById("calendarPage").style.display = "none";
+      document.getElementById("settingsPage").style.display = "none";
 
-  grid.innerHTML = filtered.map(p => {
-    const confirmed = p.bookings.filter(b => b.status === "confirmed").length;
-    const cancelled = p.bookings.filter(b => b.status === "cancelled").length;
-    return `
+      if (page === "dashboard") {
+        document.getElementById("dashboard").style.display = "block";
+      } else if (page === "patients") {
+        document.getElementById("patientsPage").style.display = "block";
+        renderPatients();
+      } else if (page === "calendar") {
+        document.getElementById("calendarPage").style.display = "block";
+        const now = new Date();
+        if (!fullCalYear) { fullCalYear = now.getFullYear(); fullCalMonth = now.getMonth(); }
+        renderFullCalendar();
+      } else if (page === "settings") {
+        document.getElementById("settingsPage").style.display = "block";
+        loadSettingsInfo();
+      }
+    }
+
+    // ── PATIENTS PAGE ──
+    let allPatients = [];
+
+    function renderPatients(filter = "") {
+      const grid = document.getElementById("patientsGrid");
+
+      // Build unique patients from appointments
+      const patientMap = {};
+      allAppointments.forEach(a => {
+        const key = a.name.toLowerCase();
+        if (!patientMap[key]) {
+          patientMap[key] = {
+            name: a.name,
+            age: a.age || "—",
+            bookings: [],
+            lastDate: a.date
+          };
+        }
+        patientMap[key].bookings.push(a);
+        patientMap[key].lastDate = a.date;
+      });
+
+      allPatients = Object.values(patientMap);
+
+      const filtered = filter
+        ? allPatients.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
+        : allPatients;
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">${filter ? "No patients found" : "No patients yet"}</div></div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const confirmed = p.bookings.filter(b => b.status === "confirmed").length;
+        const cancelled = p.bookings.filter(b => b.status === "cancelled").length;
+        return `
       <div class="patient-card" onclick="showPatientPanel('${esc(p.name)}')">
         <div class="patient-avatar">👤</div>
         <div class="patient-name">${esc(p.name)}</div>
@@ -1728,23 +2163,23 @@ function renderPatients(filter = "") {
         </div>
       </div>
     `;
-  }).join("");
-}
+      }).join("");
+    }
 
-function filterPatients() {
-  const q = document.getElementById("patientSearch").value;
-  renderPatients(q);
-}
+    function filterPatients() {
+      const q = document.getElementById("patientSearch").value;
+      renderPatients(q);
+    }
 
-function showPatientPanel(name) {
-  const patient = allPatients.find(p => p.name === name);
-  if (!patient) return;
+    function showPatientPanel(name) {
+      const patient = allPatients.find(p => p.name === name);
+      if (!patient) return;
 
-  document.getElementById("slidePanelTitle").textContent = "👤 " + name;
-  document.getElementById("slidePanelSub").textContent = `${patient.bookings.length} booking(s) • Age: ${patient.age}`;
+      document.getElementById("slidePanelTitle").textContent = "👤 " + name;
+      document.getElementById("slidePanelSub").textContent = `${patient.bookings.length} booking(s) • Age: ${patient.age}`;
 
-  const body = document.getElementById("slidePanelBody");
-  body.innerHTML = patient.bookings.map(b => `
+      const body = document.getElementById("slidePanelBody");
+      body.innerHTML = patient.bookings.map(b => `
     <div class="slide-appt-card ${b.status === 'cancelled' ? 'cancelled-card' : ''}">
       <div class="slide-appt-name">
         ${b.status === 'confirmed' ? '✅' : '❌'}
@@ -1757,110 +2192,110 @@ function showPatientPanel(name) {
     </div>
   `).join("");
 
-  openSlidePanel();
-}
+      openSlidePanel();
+    }
 
-// ── FULL CALENDAR PAGE ──
-function renderFullCalendar() {
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  document.getElementById("fullCalTitle").textContent = `${months[fullCalMonth]} ${fullCalYear}`;
+    // ── FULL CALENDAR PAGE ──
+    function renderFullCalendar() {
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      document.getElementById("fullCalTitle").textContent = `${months[fullCalMonth]} ${fullCalYear}`;
 
-  const today = new Date();
-  const firstDay = new Date(fullCalYear, fullCalMonth, 1).getDay();
-  const daysInMonth = new Date(fullCalYear, fullCalMonth + 1, 0).getDate();
-  const daysInPrev = new Date(fullCalYear, fullCalMonth, 0).getDate();
+      const today = new Date();
+      const firstDay = new Date(fullCalYear, fullCalMonth, 1).getDay();
+      const daysInMonth = new Date(fullCalYear, fullCalMonth + 1, 0).getDate();
+      const daysInPrev = new Date(fullCalYear, fullCalMonth, 0).getDate();
 
-  let html = "";
+      let html = "";
 
-  // Previous month days
-  for (let i = firstDay - 1; i >= 0; i--) {
-    html += `<div class="full-cal-cell other-month">
+      // Previous month days
+      for (let i = firstDay - 1; i >= 0; i--) {
+        html += `<div class="full-cal-cell other-month">
       <div class="full-cal-date">${daysInPrev - i}</div>
     </div>`;
-  }
+      }
 
-  // Current month days
-  for (let d = 1; d <= daysInMonth; d++) {
-    const isToday = d === today.getDate() && fullCalMonth === today.getMonth() && fullCalYear === today.getFullYear();
+      // Current month days
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === today.getDate() && fullCalMonth === today.getMonth() && fullCalYear === today.getFullYear();
 
-    // Find appointments for this day
-    const dayAppts = allAppointments.filter(a => {
-      const dateStr = (a.date || "").toLowerCase();
-      return dateStr.includes(d.toString()) &&
-        !dateStr.includes((d+1).toString()) &&
-        !dateStr.includes((d-1).toString()) ||
-        dateStr === d.toString();
-    });
+        // Find appointments for this day
+        const dayAppts = allAppointments.filter(a => {
+          const dateStr = (a.date || "").toLowerCase();
+          return dateStr.includes(d.toString()) &&
+            !dateStr.includes((d + 1).toString()) &&
+            !dateStr.includes((d - 1).toString()) ||
+            dateStr === d.toString();
+        });
 
-    // Simple day number match
-    const appts = allAppointments.filter(a => {
-      const m = (a.date || "").match(/(\d+)/);
-      return m && parseInt(m[1]) === d;
-    });
+        // Simple day number match
+        const appts = allAppointments.filter(a => {
+          const m = (a.date || "").match(/(\d+)/);
+          return m && parseInt(m[1]) === d;
+        });
 
-    const maxShow = 3;
-    const pillsHtml = appts.slice(0, maxShow).map(a => `
+        const maxShow = 3;
+        const pillsHtml = appts.slice(0, maxShow).map(a => `
       <div class="cal-appt-pill ${a.status === 'cancelled' ? 'cancelled' : ''}"
         onclick="event.stopPropagation(); showDayPanel(${d})">
         ⏰ ${esc(a.time)} ${esc(a.name)}
       </div>
     `).join("");
 
-    const moreHtml = appts.length > maxShow
-      ? `<div class="cal-more">+${appts.length - maxShow} more</div>`
-      : "";
+        const moreHtml = appts.length > maxShow
+          ? `<div class="cal-more">+${appts.length - maxShow} more</div>`
+          : "";
 
-    html += `
+        html += `
       <div class="full-cal-cell ${isToday ? 'today' : ''}" onclick="showDayPanel(${d})">
         <div class="full-cal-date">${d}</div>
         ${pillsHtml}
         ${moreHtml}
       </div>
     `;
-  }
+      }
 
-  // Next month days
-  const total = firstDay + daysInMonth;
-  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
-  for (let d = 1; d <= remaining; d++) {
-    html += `<div class="full-cal-cell other-month">
+      // Next month days
+      const total = firstDay + daysInMonth;
+      const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+      for (let d = 1; d <= remaining; d++) {
+        html += `<div class="full-cal-cell other-month">
       <div class="full-cal-date">${d}</div>
     </div>`;
-  }
+      }
 
-  document.getElementById("fullCalGrid").innerHTML = html;
-}
+      document.getElementById("fullCalGrid").innerHTML = html;
+    }
 
-function fullCalChangeMonth(dir) {
-  fullCalMonth += dir;
-  if (fullCalMonth > 11) { fullCalMonth = 0; fullCalYear++; }
-  if (fullCalMonth < 0)  { fullCalMonth = 11; fullCalYear--; }
-  renderFullCalendar();
-}
+    function fullCalChangeMonth(dir) {
+      fullCalMonth += dir;
+      if (fullCalMonth > 11) { fullCalMonth = 0; fullCalYear++; }
+      if (fullCalMonth < 0) { fullCalMonth = 11; fullCalYear--; }
+      renderFullCalendar();
+    }
 
-function goToToday() {
-  const now = new Date();
-  fullCalYear = now.getFullYear();
-  fullCalMonth = now.getMonth();
-  renderFullCalendar();
-}
+    function goToToday() {
+      const now = new Date();
+      fullCalYear = now.getFullYear();
+      fullCalMonth = now.getMonth();
+      renderFullCalendar();
+    }
 
-function showDayPanel(day) {
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const appts = allAppointments.filter(a => {
-    const m = (a.date || "").match(/(\d+)/);
-    return m && parseInt(m[1]) === day;
-  });
+    function showDayPanel(day) {
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const appts = allAppointments.filter(a => {
+        const m = (a.date || "").match(/(\d+)/);
+        return m && parseInt(m[1]) === day;
+      });
 
-  document.getElementById("slidePanelTitle").textContent = `📅 ${day} ${months[fullCalMonth]}`;
-  document.getElementById("slidePanelSub").textContent = `${appts.length} appointment(s)`;
+      document.getElementById("slidePanelTitle").textContent = `📅 ${day} ${months[fullCalMonth]}`;
+      document.getElementById("slidePanelSub").textContent = `${appts.length} appointment(s)`;
 
-  const body = document.getElementById("slidePanelBody");
+      const body = document.getElementById("slidePanelBody");
 
-  if (!appts.length) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No appointments on this day</div></div>`;
-  } else {
-    body.innerHTML = appts.map(a => `
+      if (!appts.length) {
+        body.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No appointments on this day</div></div>`;
+      } else {
+        body.innerHTML = appts.map(a => `
       <div class="slide-appt-card ${a.status === 'cancelled' ? 'cancelled-card' : ''}">
         <div class="slide-appt-name">
           ${a.status === 'confirmed' ? '✅' : '❌'}
@@ -1873,239 +2308,312 @@ function showDayPanel(day) {
         <div class="slide-appt-row"><span>🆔</span><span>Booking #${a.id}</span></div>
       </div>
     `).join("");
-  }
+      }
 
-  openSlidePanel();
-}
+      openSlidePanel();
+    }
 
-// ── SLIDE PANEL ──
-function openSlidePanel() {
-  document.getElementById("slidePanelOverlay").classList.add("open");
-  document.getElementById("slidePanel").classList.add("open");
-  document.body.style.overflow = "hidden";
-}
+    // ── SLIDE PANEL ──
+    function openSlidePanel() {
+      document.getElementById("slidePanelOverlay").classList.add("open");
+      document.getElementById("slidePanel").classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
 
-function closeSlidePanel() {
-  document.getElementById("slidePanelOverlay").classList.remove("open");
-  document.getElementById("slidePanel").classList.remove("open");
-  document.body.style.overflow = "";
-}
+    function closeSlidePanel() {
+      document.getElementById("slidePanelOverlay").classList.remove("open");
+      document.getElementById("slidePanel").classList.remove("open");
+      document.body.style.overflow = "";
+    }
 
-// ── TOAST ──
-function showToast(msg, type = "success") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast " + type + " show";
-  setTimeout(() => { t.className = "toast " + type; }, 3000);
-}
+    // ── TOAST ──
+    function showToast(msg, type = "success") {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast " + type + " show";
+      setTimeout(() => { t.className = "toast " + type; }, 3000);
+    }
 
-// ── INIT ──
-// ── CLINIC CONFIG — fetched once, applied everywhere ──
-let clinicNameCache = "Bota Admin";
-let clinicOpenHourCache = 9;
-let clinicCloseHourCache = 20;
+    // ── INIT ──
+    // ── CLINIC CONFIG — fetched once, applied everywhere ──
+    let clinicNameCache = "Bota Admin";
+    let clinicOpenHourCache = 9;
+    let clinicCloseHourCache = 20;
 
-async function loadClinicConfig() {
-  try {
-    const res = await fetch(`${API_BASE}/clinic-config`);
-    const data = await res.json();
-    clinicNameCache = data.clinic_name || "Bota Admin";
-    if (data.open_hour !== undefined)  clinicOpenHourCache  = data.open_hour;
-    if (data.close_hour !== undefined) clinicCloseHourCache = data.close_hour;
-  } catch (e) {
-    clinicNameCache = "Bota Admin";
-  }
+    async function loadClinicConfig() {
+      try {
+        const res = await fetch(`${API_BASE}/clinic-config`);
+        const data = await res.json();
+        clinicNameCache = data.clinic_name || "Bota Admin";
+        if (data.open_hour !== undefined) clinicOpenHourCache = data.open_hour;
+        if (data.close_hour !== undefined) clinicCloseHourCache = data.close_hour;
+      } catch (e) {
+        clinicNameCache = "Bota Admin";
+      }
 
-  const loginEl = document.getElementById("loginClinicName");
-  if (loginEl) loginEl.textContent = `${clinicNameCache} — Staff Access`;
+      const loginEl = document.getElementById("loginClinicName");
+      if (loginEl) loginEl.textContent = `${clinicNameCache} — Staff Access`;
 
-  const mobileEl = document.getElementById("mobileClinicName");
-  if (mobileEl) mobileEl.textContent = `🦷 ${clinicNameCache}`;
+      const mobileEl = document.getElementById("mobileClinicName");
+      if (mobileEl) mobileEl.textContent = `🦷 ${clinicNameCache}`;
 
-  const sidebarEl = document.getElementById("sidebarClinicName");
-  if (sidebarEl) sidebarEl.textContent = clinicNameCache;
+      const sidebarEl = document.getElementById("sidebarClinicName");
+      if (sidebarEl) sidebarEl.textContent = clinicNameCache;
 
-  const pageHeaderEl = document.getElementById("pageHeaderClinicName");
-  if (pageHeaderEl) pageHeaderEl.textContent = `${clinicNameCache} — All appointments`;
-}
+      const pageHeaderEl = document.getElementById("pageHeaderClinicName");
+      if (pageHeaderEl) pageHeaderEl.textContent = `${clinicNameCache} — All appointments`;
+    }
 
-// Load clinic name as soon as page opens (so login screen shows correct name)
-loadClinicConfig();
+    // Load clinic name as soon as page opens (so login screen shows correct name)
+    loadClinicConfig();
 
-// ── SETTINGS PAGE ──
-function formatHour(h) {
-  const period = h >= 12 ? "PM" : "AM";
-  let hour12 = h % 12;
-  if (hour12 === 0) hour12 = 12;
-  return `${hour12} ${period}`;
-}
+    // ── SETTINGS PAGE ──
+    function formatHour(h) {
+      const period = h >= 12 ? "PM" : "AM";
+      let hour12 = h % 12;
+      if (hour12 === 0) hour12 = 12;
+      return `${hour12} ${period}`;
+    }
 
-function loadSettingsInfo() {
-  document.getElementById("settingsClinicName").textContent = clinicNameCache;
-  document.getElementById("settingsHours").textContent =
-    `${formatHour(clinicOpenHourCache)} – ${formatHour(clinicCloseHourCache)}`;
+    function loadSettingsInfo() {
+      document.getElementById("settingsClinicName").textContent = clinicNameCache;
+      document.getElementById("settingsHours").textContent =
+        `${formatHour(clinicOpenHourCache)} – ${formatHour(clinicCloseHourCache)}`;
 
-  // Clear password fields each time settings page opens
-  document.getElementById("currentPassword").value = "";
-  document.getElementById("newPassword").value = "";
-  document.getElementById("confirmPassword").value = "";
-  document.getElementById("passwordError").style.display = "none";
-}
-
-async function changePassword() {
-  const current = document.getElementById("currentPassword").value.trim();
-  const newPass = document.getElementById("newPassword").value.trim();
-  const confirm = document.getElementById("confirmPassword").value.trim();
-  const err = document.getElementById("passwordError");
-
-  if (!current || !newPass || !confirm) {
-    err.textContent = "❌ Please fill in all fields";
-    err.style.display = "block";
-    return;
-  }
-
-  if (newPass !== confirm) {
-    err.textContent = "❌ New passwords do not match";
-    err.style.display = "block";
-    return;
-  }
-
-  if (newPass.length < 6) {
-    err.textContent = "❌ New password must be at least 6 characters";
-    err.style.display = "block";
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/admin-change-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ current_password: current, new_password: newPass })
-    });
-
-    if (res.ok) {
-      err.style.display = "none";
-      showToast("✅ Password updated successfully", "success");
+      // Clear password fields each time settings page opens
       document.getElementById("currentPassword").value = "";
       document.getElementById("newPassword").value = "";
       document.getElementById("confirmPassword").value = "";
-    } else {
-      const data = await res.json();
-      err.textContent = "❌ " + (data.detail || "Could not update password");
-      err.style.display = "block";
+      document.getElementById("passwordError").style.display = "none";
     }
-  } catch (e) {
-    err.textContent = "❌ Could not connect to server";
-    err.style.display = "block";
-  }
-}
 
-function initDashboard() {
-  // Make sure dashboard page is visible on first login
-  // (it's hidden by default via CSS, only becomes visible when a nav item is clicked)
-  document.getElementById("dashboard").style.display = "block";
-  document.getElementById("patientsPage").style.display = "none";
-  document.getElementById("calendarPage").style.display = "none";
-  document.getElementById("settingsPage").style.display = "none";
+    async function changePassword() {
+      const current = document.getElementById("currentPassword").value.trim();
+      const newPass = document.getElementById("newPassword").value.trim();
+      const confirm = document.getElementById("confirmPassword").value.trim();
+      const err = document.getElementById("passwordError");
 
-  // Set today's date
-  const now = new Date();
-  document.getElementById("todayDate").textContent = now.toLocaleDateString("en-IN", {
-    weekday: "short", day: "numeric", month: "short", year: "numeric"
-  });
+      if (!current || !newPass || !confirm) {
+        err.textContent = "❌ Please fill in all fields";
+        err.style.display = "block";
+        return;
+      }
 
-  // Init calendar
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
-  renderCalendar();
+      if (newPass !== confirm) {
+        err.textContent = "❌ New passwords do not match";
+        err.style.display = "block";
+        return;
+      }
 
-  // Load data
-  loadData();
-}
+      if (newPass.length < 6) {
+        err.textContent = "❌ New password must be at least 6 characters";
+        err.style.display = "block";
+        return;
+      }
 
-// ── LOAD DATA ──
-async function loadData() {
-  try {
-    const res = await fetch(`${API_BASE}/appointments`);
-    allAppointments = await res.json();
-    renderAll();
-  } catch(e) {
-    showToast("Could not connect to server", "error");
-  }
-}
+      try {
+        const res = await fetch(`${API_BASE}/admin-change-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ current_password: current, new_password: newPass })
+        });
 
-function renderAll() {
-  updateStats();
-  renderTodayList();
-  renderTable(allAppointments);
-  renderCalendar();
-  renderCharts();
-}
+        if (res.ok) {
+          err.style.display = "none";
+          showToast("✅ Password updated successfully", "success");
+          document.getElementById("currentPassword").value = "";
+          document.getElementById("newPassword").value = "";
+          document.getElementById("confirmPassword").value = "";
+        } else {
+          const data = await res.json();
+          err.textContent = "❌ " + (data.detail || "Could not update password");
+          err.style.display = "block";
+        }
+      } catch (e) {
+        err.textContent = "❌ Could not connect to server";
+        err.style.display = "block";
+      }
+    }
 
-// ── EXPORT CSV — downloads bookings as Excel-compatible file ──
-function exportCSV() {
-  window.location.href = `${API_BASE}/appointments/export`;
-  showToast("📥 Downloading CSV...", "success");
-}
+    function initDashboard() {
+      // Make sure dashboard page is visible on first login
+      // (it's hidden by default via CSS, only becomes visible when a nav item is clicked)
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("patientsPage").style.display = "none";
+      document.getElementById("calendarPage").style.display = "none";
+      document.getElementById("settingsPage").style.display = "none";
 
-// ── STATS ──
-function updateStats() {
-  const total = allAppointments.length;
-  const confirmed = allAppointments.filter(a => a.status === "confirmed").length;
+      // Set today's date
+      const now = new Date();
+      document.getElementById("todayDate").textContent = now.toLocaleDateString("en-IN", {
+        weekday: "short", day: "numeric", month: "short", year: "numeric"
+      });
 
-  // Today's bookings - simple check if date contains today keywords
-  const today = new Date();
-  const todayStr = today.toLocaleDateString("en-IN", { day: "numeric", month: "long" }).toLowerCase();
-  const todayNum = today.getDate();
+      // Init calendar
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      renderCalendar();
 
-  const todayBookings = allAppointments.filter(a => {
-    const d = (a.date || "").toLowerCase();
-    return d.includes("today") || d.includes(todayNum.toString());
-  });
+      // Load data
+      loadData();
+    }
 
-  document.getElementById("statTotal").textContent = total;
-  document.getElementById("statToday").textContent = todayBookings.length;
-  document.getElementById("statTodaySub").textContent = todayBookings.length > 0 ? "Appointments today" : "No appointments today";
-  document.getElementById("statConfirmed").textContent = confirmed;
-}
+    // ── LOAD DATA ──
+    async function loadData() {
+      try {
+        const res = await fetch(`${API_BASE}/appointments`);
+        allAppointments = await res.json();
+        renderAll();
+      } catch (e) {
+        showToast("Could not connect to server", "error");
+      }
+    }
 
-// ── TODAY LIST ──
-function renderTodayList() {
-  const list = document.getElementById("todayList");
-  const todayNum = new Date().getDate();
+    function renderAll() {
+      updateStats();
+      renderTodayList();
+      renderTable(allAppointments);
+      renderCalendar();
+      renderCharts();
+    }
 
-  const todayBookings = allAppointments.filter(a => {
-    const d = (a.date || "").toLowerCase();
-    return d.includes("today") || d.includes(todayNum.toString());
-  });
+    // ── EXPORT CSV — downloads bookings as Excel-compatible file ──
+    function exportCSV() {
+      window.location.href = `${API_BASE}/appointments/export`;
+      showToast("📥 Downloading CSV...", "success");
+    }
 
-  document.getElementById("todayCount").textContent = todayBookings.length;
+    // ── OFFLINE APPOINTMENT FORM ──
 
-  if (!todayBookings.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No appointments today</div></div>`;
-    return;
-  }
+    function openOfflineAppointmentForm() {
+      document.getElementById("offlineAppointmentModal").style.display = "flex";
+    }
 
-  list.innerHTML = todayBookings.map(a => `
+    function closeOfflineAppointmentForm() {
+      document.getElementById("offlineAppointmentModal").style.display = "none";
+      document.getElementById("offlineAppointmentForm").reset();
+      document.getElementById("offlineService").value = "General Consultation";
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const offlineForm = document.getElementById("offlineAppointmentForm");
+
+      if (offlineForm) {
+
+        offlineForm.addEventListener("submit", async function (e) {
+
+          e.preventDefault();
+
+          const data = {
+            name: document.getElementById("offlineName").value.trim(),
+            age: document.getElementById("offlineAge").value.trim(),
+            phone: document.getElementById("offlinePhone").value.trim(),
+            date: document.getElementById("offlineDate").value,
+            time: document.getElementById("offlineTime").value,
+            service: document.getElementById("offlineService").value.trim() || "General Consultation"
+          };
+
+          try {
+
+            const response = await fetch(`${API_BASE}/admin/add-appointment`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              credentials: "include",
+              body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.detail || "Failed to add appointment");
+            }
+
+            showToast("✅ Offline appointment added successfully", "success");
+
+            closeOfflineAppointmentForm();
+
+            if (typeof loadAppointments === "function") {
+              loadAppointments();
+            }
+
+          } catch (error) {
+
+            console.error("Offline appointment error:", error);
+
+            showToast(`❌ ${error.message}`, "error");
+          }
+
+        });
+      }
+
+    });
+
+    // Refresh the appointment list
+    if (typeof loadAppointments === "function") {
+      loadAppointments();
+    }
+
+    // ── STATS ──
+    function updateStats() {
+      const total = allAppointments.length;
+      const confirmed = allAppointments.filter(a => a.status === "confirmed").length;
+
+      // Today's bookings - simple check if date contains today keywords
+      const today = new Date();
+      const todayStr = today.toLocaleDateString("en-IN", { day: "numeric", month: "long" }).toLowerCase();
+      const todayNum = today.getDate();
+
+      const todayBookings = allAppointments.filter(a => {
+        const d = (a.date || "").toLowerCase();
+        return d.includes("today") || d.includes(todayNum.toString());
+      });
+
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statToday").textContent = todayBookings.length;
+      document.getElementById("statTodaySub").textContent = todayBookings.length > 0 ? "Appointments today" : "No appointments today";
+      document.getElementById("statConfirmed").textContent = confirmed;
+    }
+
+    // ── TODAY LIST ──
+    function renderTodayList() {
+      const list = document.getElementById("todayList");
+      const todayNum = new Date().getDate();
+
+      const todayBookings = allAppointments.filter(a => {
+        const d = (a.date || "").toLowerCase();
+        return d.includes("today") || d.includes(todayNum.toString());
+      });
+
+      document.getElementById("todayCount").textContent = todayBookings.length;
+
+      if (!todayBookings.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No appointments today</div></div>`;
+        return;
+      }
+
+      list.innerHTML = todayBookings.map(a => `
     <div class="booking-item ${a.status}">
       <div class="booking-item-name">👤 ${esc(a.name)}</div>
       <div class="booking-item-time">⏰ ${esc(a.time)} &nbsp;•&nbsp; 🦷 ${esc(a.service || 'General Consultation')}</div>
       <span class="booking-item-status status-${a.status}">${a.status}</span>
     </div>
   `).join("");
-}
+    }
 
-// ── TABLE ──
-function renderTable(data) {
-  const body = document.getElementById("tableBody");
-  document.getElementById("tableCount").textContent = data.length;
+    // ── TABLE ──
+    function renderTable(data) {
+      const body = document.getElementById("tableBody");
+      document.getElementById("tableCount").textContent = data.length;
 
-  if (!data.length) {
-    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No bookings found</div></div></td></tr>`;
-    return;
-  }
+      if (!data.length) {
+        body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No bookings found</div></div></td></tr>`;
+        return;
+      }
 
-  body.innerHTML = data.map(a => `
+      body.innerHTML = data.map(a => `
     <tr id="row-${a.id}">
       <td><strong>#${a.id}</strong></td>
       <td>${esc(a.name)}</td>
@@ -2122,186 +2630,296 @@ function renderTable(data) {
       <td>
         ${a.status === 'confirmed'
           ? `<button class="cancel-btn" onclick="cancelAppointment(${a.id}, this)">❌ Cancel</button>`
-          : `<span style="color:var(--text-muted);font-size:12px;">—</span>`
+          : `<button
+  class="delete-btn"
+  onclick="permanentlyDeleteAppointment(${a.id}, this)"
+  title="Permanently delete appointment"
+  style="
+    padding:7px 11px;
+    border:none;
+    border-radius:7px;
+    background:#fff0f0;
+    color:#d64545;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  "
+>
+  🗑 Delete
+</button>`
         }
       </td>
     </tr>
   `).join("");
-}
-
-// ── FILTER ──
-function filterTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const status = document.getElementById("statusFilter").value;
-
-  const filtered = allAppointments.filter(a => {
-    const matchSearch = !search || a.name.toLowerCase().includes(search) || (a.date || "").toLowerCase().includes(search);
-    const matchStatus = status === "all" || a.status === status;
-    return matchSearch && matchStatus;
-  });
-
-  renderTable(filtered);
-}
-
-// ── CANCEL APPOINTMENT ──
-async function cancelAppointment(id, btn) {
-  if (!confirm("Cancel this appointment?")) return;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>';
-
-  try {
-    const res = await fetch(`${API_BASE}/appointments/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      // Update local data
-      const appt = allAppointments.find(a => a.id === id);
-      if (appt) appt.status = "cancelled";
-      renderAll();
-      showToast("✅ Appointment cancelled", "success");
-    } else {
-      showToast("Could not cancel appointment", "error");
-      btn.disabled = false;
-      btn.innerHTML = "❌ Cancel";
     }
-  } catch(e) {
-    showToast("Server error", "error");
-    btn.disabled = false;
-    btn.innerHTML = "❌ Cancel";
-  }
-}
 
-// ── CALENDAR ──
-function renderCalendar() {
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  document.getElementById("calMonthTitle").textContent = `${months[calMonth]} ${calYear}`;
+    // ── FILTER ──
+    function filterTable() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const status = document.getElementById("statusFilter").value;
 
-  const today = new Date();
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+      const filtered = allAppointments.filter(a => {
+        const matchSearch = !search || a.name.toLowerCase().includes(search) || (a.date || "").toLowerCase().includes(search);
+        const matchStatus = status === "all" || a.status === status;
+        return matchSearch && matchStatus;
+      });
 
-  // Get days that have bookings
-  const bookingDays = new Set(
-    allAppointments
-      .filter(a => a.status === "confirmed")
-      .map(a => {
-        const match = (a.date || "").match(/(\d+)/);
-        return match ? parseInt(match[1]) : null;
-      })
-      .filter(Boolean)
-  );
+      renderTable(filtered);
+    }
 
-  let html = "";
+    // ── PERMANENTLY DELETE CANCELLED APPOINTMENT ──
+    async function permanentlyDeleteAppointment(id, btn) {
+      if (!confirm("Permanently delete this cancelled appointment? This cannot be undone.")) {
+        return;
+      }
 
-  // Previous month days
-  for (let i = firstDay - 1; i >= 0; i--) {
-    html += `<div class="cal-day other-month">${daysInPrev - i}</div>`;
-  }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
 
-  // Current month days
-  for (let d = 1; d <= daysInMonth; d++) {
-    const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
-    const hasBooking = bookingDays.has(d);
-    html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasBooking ? 'has-booking' : ''}">${d}</div>`;
-  }
+      try {
+        const res = await fetch(
+          `${API_BASE}/appointments/${id}/permanent`,
+          {
+            method: "DELETE",
+            credentials: "include"
+          }
+        );
 
-  // Next month days
-  const remaining = 42 - firstDay - daysInMonth;
-  for (let d = 1; d <= remaining; d++) {
-    html += `<div class="cal-day other-month">${d}</div>`;
-  }
+        if (res.ok) {
+          allAppointments = allAppointments.filter(a => a.id !== id);
 
-  document.getElementById("calDays").innerHTML = html;
-}
+          renderAll();
 
-function changeMonth(dir) {
-  calMonth += dir;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
-  renderCalendar();
-}
+          showToast("🗑️ Appointment permanently deleted", "success");
+        } else {
+          const result = await res.json().catch(() => ({}));
 
-// ── CHARTS ──
-function renderCharts() {
-  // Service distribution
-  const services = {};
-  allAppointments.filter(a => a.status === "confirmed").forEach(a => {
-    const s = a.service || "General Consultation";
-    services[s] = (services[s] || 0) + 1;
-  });
+          showToast(
+            result.detail || "Could not delete appointment",
+            "error"
+          );
 
-  const serviceLabels = Object.keys(services);
-  const serviceData = Object.values(services);
+          btn.disabled = false;
+          btn.innerHTML = "🗑 Delete";
+        }
 
-  if (serviceChart) serviceChart.destroy();
-  const ctx1 = document.getElementById("serviceChart").getContext("2d");
-  serviceChart = new Chart(ctx1, {
-    type: "bar",
-    data: {
-      labels: serviceLabels.length ? serviceLabels : ["No data"],
-      datasets: [{
-        label: "Bookings",
-        data: serviceData.length ? serviceData : [0],
-        backgroundColor: ["rgba(61,217,179,0.7)","rgba(26,171,138,0.7)","rgba(46,196,160,0.5)","rgba(100,220,190,0.6)","rgba(178,237,224,0.8)","rgba(0,160,120,0.6)"],
-        borderRadius: 8,
-        borderSkipped: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(0,0,0,0.04)" } },
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      } catch (e) {
+        console.error("Permanent delete error:", e);
+
+        showToast("Server error", "error");
+
+        btn.disabled = false;
+        btn.innerHTML = "🗑 Delete";
       }
     }
-  });
 
-  // Booking trend — last 7 days count
-  const days = [];
-  const counts = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const label = d.toLocaleDateString("en-IN", { weekday: "short" });
-    const num = d.getDate();
-    days.push(label);
-    counts.push(allAppointments.filter(a => (a.date || "").includes(num.toString())).length);
-  }
+    // ── CANCEL APPOINTMENT ──
+    async function cancelAppointment(id, btn) {
+      if (!confirm("Cancel this appointment?")) return;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
 
-  if (trendChart) trendChart.destroy();
-  const ctx2 = document.getElementById("trendChart").getContext("2d");
-  trendChart = new Chart(ctx2, {
-    type: "line",
-    data: {
-      labels: days,
-      datasets: [{
-        label: "Bookings",
-        data: counts,
-        borderColor: "#2ec4a0",
-        backgroundColor: "rgba(46,196,160,0.1)",
-        borderWidth: 2.5,
-        pointBackgroundColor: "#2ec4a0",
-        pointRadius: 4,
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(0,0,0,0.04)" } },
-        x: { grid: { display: false } }
+      try {
+        const res = await fetch(`${API_BASE}/appointments/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          // Update local data
+          const appt = allAppointments.find(a => a.id === id);
+          if (appt) appt.status = "cancelled";
+          renderAll();
+          showToast("✅ Appointment cancelled", "success");
+        } else {
+          showToast("Could not cancel appointment", "error");
+          btn.disabled = false;
+          btn.innerHTML = "❌ Cancel";
+        }
+      } catch (e) {
+        showToast("Server error", "error");
+        btn.disabled = false;
+        btn.innerHTML = "❌ Cancel";
       }
     }
-  });
-}
 
-function esc(t) {
-  return String(t || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-</script>
+    // ── CALENDAR ──
+    function renderCalendar() {
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      document.getElementById("calMonthTitle").textContent = `${months[calMonth]} ${calYear}`;
+
+      const today = new Date();
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+
+      // Get days that have bookings
+      const bookingDays = new Set(
+        allAppointments
+          .filter(a => a.status === "confirmed")
+          .map(a => {
+            const match = (a.date || "").match(/(\d+)/);
+            return match ? parseInt(match[1]) : null;
+          })
+          .filter(Boolean)
+      );
+
+      let html = "";
+
+      // Previous month days
+      for (let i = firstDay - 1; i >= 0; i--) {
+        html += `<div class="cal-day other-month">${daysInPrev - i}</div>`;
+      }
+
+      // Current month days
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+        const hasBooking = bookingDays.has(d);
+        html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasBooking ? 'has-booking' : ''}">${d}</div>`;
+      }
+
+      // Next month days
+      const remaining = 42 - firstDay - daysInMonth;
+      for (let d = 1; d <= remaining; d++) {
+        html += `<div class="cal-day other-month">${d}</div>`;
+      }
+
+      document.getElementById("calDays").innerHTML = html;
+    }
+
+    function changeMonth(dir) {
+      calMonth += dir;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    }
+
+    // ── CHARTS ──
+    function renderCharts() {
+      // Service distribution
+      const services = {};
+      allAppointments.filter(a => a.status === "confirmed").forEach(a => {
+        const s = a.service || "General Consultation";
+        services[s] = (services[s] || 0) + 1;
+      });
+
+      const serviceLabels = Object.keys(services);
+      const serviceData = Object.values(services);
+
+      if (serviceChart) serviceChart.destroy();
+      const ctx1 = document.getElementById("serviceChart").getContext("2d");
+      serviceChart = new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: serviceLabels.length ? serviceLabels : ["No data"],
+          datasets: [{
+            label: "Bookings",
+            data: serviceData.length ? serviceData : [0],
+            backgroundColor: ["rgba(61,217,179,0.7)", "rgba(26,171,138,0.7)", "rgba(46,196,160,0.5)", "rgba(100,220,190,0.6)", "rgba(178,237,224,0.8)", "rgba(0,160,120,0.6)"],
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(0,0,0,0.04)" } },
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+
+      // Booking trend — last 7 days count
+      const days = [];
+      const counts = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const label = d.toLocaleDateString("en-IN", { weekday: "short" });
+        const num = d.getDate();
+        days.push(label);
+        counts.push(allAppointments.filter(a => (a.date || "").includes(num.toString())).length);
+      }
+
+      if (trendChart) trendChart.destroy();
+      const ctx2 = document.getElementById("trendChart").getContext("2d");
+      trendChart = new Chart(ctx2, {
+        type: "line",
+        data: {
+          labels: days,
+          datasets: [{
+            label: "Bookings",
+            data: counts,
+            borderColor: "#2ec4a0",
+            backgroundColor: "rgba(46,196,160,0.1)",
+            borderWidth: 2.5,
+            pointBackgroundColor: "#2ec4a0",
+            pointRadius: 4,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(0,0,0,0.04)" } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function esc(t) {
+      return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+
+  <!-- Offline Appointment Modal -->
+  <div id="offlineAppointmentModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+            z-index:9999; align-items:center; justify-content:center;">
+
+    <div style="background:white; width:90%; max-width:500px; border-radius:18px;
+              padding:25px; box-shadow:0 20px 50px rgba(0,0,0,0.2);">
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Add Offline Appointment</h2>
+
+        <button type="button" onclick="closeOfflineAppointmentForm()"
+          style="border:none; background:none; font-size:24px; cursor:pointer;">
+          ×
+        </button>
+      </div>
+
+      <form id="offlineAppointmentForm">
+
+        <input id="offlineName" type="text" placeholder="Patient Name" required
+          style="width:100%; padding:12px; margin-bottom:12px; box-sizing:border-box;">
+
+        <input id="offlineAge" type="number" placeholder="Age" min="1" max="120"
+          style="width:100%; padding:12px; margin-bottom:12px; box-sizing:border-box;">
+
+        <input id="offlinePhone" type="tel" placeholder="Phone Number"
+          style="width:100%; padding:12px; margin-bottom:12px; box-sizing:border-box;">
+
+        <input id="offlineDate" type="date" required
+          style="width:100%; padding:12px; margin-bottom:12px; box-sizing:border-box;">
+
+        <input id="offlineTime" type="time" required
+          style="width:100%; padding:12px; margin-bottom:12px; box-sizing:border-box;">
+
+        <input id="offlineService" type="text" placeholder="Service" value="General Consultation"
+          style="width:100%; padding:12px; margin-bottom:18px; box-sizing:border-box;">
+
+        <button type="submit" style="width:100%; padding:13px; border:none; border-radius:10px;
+               background:#20b486; color:white; font-size:16px; cursor:pointer;">
+          Save Appointment
+        </button>
+
+      </form>
+
+    </div>
+  </div>
 </body>
+
 </html>

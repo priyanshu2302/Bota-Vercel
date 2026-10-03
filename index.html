@@ -678,6 +678,21 @@ function onInlineDatePicked(isoDate) {
   sendMessage();
 }
 
+function selectTimeSlot(slot) {
+  const d = bookingFlow.data;
+
+  d.time = slot;
+  bookingFlow.step = "confirm";
+
+  addBotBubble(
+    `Great choice! ⏰ You selected <strong>${esc(slot)}</strong>.`
+  );
+
+  setTimeout(() => {
+    showConfirmCard();
+  }, 400);
+}
+
 // ── SHOW CONFIRMATION CARD ──
 function showConfirmCard() {
   const d = bookingFlow.data;
@@ -1109,8 +1124,62 @@ function handleBookingStep(userInput) {
 
       // Store a clean, unambiguous formatted date (e.g. "15 June 2026")
       d.date = formatDateObj(parsedDateObj);
-      bookingFlow.step = "time";
-      addBotBubble(`Perfect! 📅<br>What <strong>time</strong> works best for you?<br><span style="font-size:12px;opacity:0.7;">Our clinic is open 9 AM – 8 PM. e.g. 10 AM, 2:30 PM</span>`);
+
+fetch(`/available-slots?date=${encodeURIComponent(d.date)}`)
+  .then(response => response.json())
+  .then(data => {
+    if (!data.slots || data.slots.length === 0) {
+      addBotBubble(
+        `Sorry, there are no available slots on <strong>${esc(d.date)}</strong> 😔<br>` +
+        `Please choose another date.`,
+        null,
+        true
+      );
+      bookingFlow.step = "date";
+      return;
+    }
+
+    bookingFlow.step = "time";
+
+    let slotsHtml = `
+      <div style="margin-top:8px;">
+        <strong>Available time slots:</strong>
+      </div>
+      <div class="slot-buttons" style="margin-top:10px;">
+    `;
+
+    data.slots.forEach(slot => {
+      slotsHtml += `
+        <button
+          type="button"
+          onclick="selectTimeSlot('${slot}')"
+          style="
+            margin:4px;
+            padding:9px 14px;
+            border:1px solid #ccc;
+            border-radius:10px;
+            background:white;
+            cursor:pointer;
+          "
+        >
+          ${slot}
+        </button>
+      `;
+    });
+
+    slotsHtml += `</div>`;
+
+    addBotBubble(
+      `Perfect! 📅<br><strong>${esc(d.date)}</strong><br>${slotsHtml}`
+    );
+  })
+  .catch(error => {
+    console.error("Error loading available slots:", error);
+    addBotBubble(
+      `Sorry, I couldn't load the available time slots right now. 😔<br>` +
+      `Please try again.`
+    );
+  });
 
     // ── STEP: TIME ──
     } else if (step === "time") {
