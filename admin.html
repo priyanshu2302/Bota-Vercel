@@ -2613,9 +2613,9 @@
         return;
       }
 
-      body.innerHTML = data.map(a => `
+      body.innerHTML = data.map((a, index) => `
     <tr id="row-${a.id}">
-      <td><strong>#${a.id}</strong></td>
+      <td><strong>#${index + 1}</strong></td>
       <td>${esc(a.name)}</td>
       <td>${esc(a.age || '—')}</td>
       <td>${a.phone ? `+91 ${esc(a.phone)}` : '—'}</td>
