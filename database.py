@@ -397,3 +397,801 @@ def get_available_slots(date):
                 available_slots.append(formatted_slot)
 
     return available_slots
+
+
+# ============================================================
+# MULTI-CLINIC DATABASE FUNCTIONS
+# Existing functions above are preserved for backward compatibility.
+# ============================================================
+
+import json
+
+
+def _require_postgres():
+    if not is_postgres():
+        raise RuntimeError(
+            "Multi-clinic functionality requires the Supabase PostgreSQL database."
+        )
+
+
+def _json_value(value):
+    """Convert a PostgreSQL JSON/JSONB value into a Python object."""
+    if value is None:
+        return {}
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except (ValueError, TypeError):
+            return {}
+    return value
+
+
+# ------------------------------------------------------------
+# CLINIC LOOKUP
+# ------------------------------------------------------------
+
+def get_clinic_by_id(clinic_id):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, slug, status
+            FROM clinics
+            WHERE id = %s
+            LIMIT 1
+        """, (clinic_id,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        return {
+            "id": row[0],
+            "name": row[1],
+            "slug": row[2],
+            "status": row[3],
+        }
+    finally:
+        conn.close()
+
+
+def get_clinic_by_slug(slug):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, slug, status
+            FROM clinics
+            WHERE LOWER(slug) = LOWER(%s)
+            LIMIT 1
+        """, (slug.strip(),))
+
+        row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        return {
+            "id": row[0],
+            "name": row[1],
+            "slug": row[2],
+            "status": row[3],
+        }
+    finally:
+        conn.close()
+
+
+def get_active_clinic_by_slug(slug):
+    clinic = get_clinic_by_slug(slug)
+
+    if not clinic or clinic["status"] != "active":
+        return None
+
+    return clinic
+
+
+# ------------------------------------------------------------
+# CLINIC SETTINGS
+# ------------------------------------------------------------
+
+def get_clinic_settings(clinic_id):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT settings
+            FROM clinic_settings
+            WHERE clinic_id = %s
+            LIMIT 1
+        """, (clinic_id,))
+
+        row = cursor.fetchone()
+
+        return _json_value(row[0]) if row else {}
+    finally:
+        conn.close()
+
+
+def save_clinic_settings(clinic_id, settings):
+    _require_postgres()
+
+    if not isinstance(settings, dict):
+        raise ValueError("Settings must be a dictionary.")
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO clinic_settings (clinic_id, settings)
+            VALUES (%s, %s::jsonb)
+            ON CONFLICT (clinic_id)
+            DO UPDATE SET settings = EXCLUDED.settings
+        """, (clinic_id, json.dumps(settings)))
+
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------
+# CHATBOT CONFIGURATION
+# ------------------------------------------------------------
+
+def get_chatbot_config(clinic_id):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT config, is_enabled
+            FROM chatbot_configs
+            WHERE clinic_id = %s
+            LIMIT 1
+        """, (clinic_id,))
+
+        row = cursor.fetchone()
+
+        if not row:
+            return {
+                "config": {},
+                "is_enabled": False,
+            }
+
+        return {
+            "config": _json_value(row[0]),
+            "is_enabled": bool(row[1]),
+        }
+    finally:
+        conn.close()
+
+
+def save_chatbot_config(clinic_id, config, is_enabled=True):
+    _require_postgres()
+
+    if not isinstance(config, dict):
+        raise ValueError("Chatbot config must be a dictionary.")
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO chatbot_configs (clinic_id, config, is_enabled)
+            VALUES (%s, %s::jsonb, %s)
+            ON CONFLICT (clinic_id)
+            DO UPDATE SET
+                config = EXCLUDED.config,
+                is_enabled = EXCLUDED.is_enabled
+        """, (clinic_id, json.dumps(config), is_enabled))
+
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------
+# CLINIC-SPECIFIC APPOINTMENTS
+# ------------------------------------------------------------
+
+def is_slot_taken_for_clinic(clinic_id, date, time):
+    _require_postgres()
+
+    normalized_date = normalize_date(date)
+    normalized_time = normalize_time(time)
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT time
+            FROM appointments
+            WHERE clinic_id = %s
+              AND LOWER(date) = LOWER(%s)
+              AND status = 'confirmed'
+        """, (clinic_id, normalized_date))
+
+        rows = cursor.fetchall()
+
+        return any(
+            normalize_time(str(row[0])) == normalized_time
+            for row in rows
+        )
+    finally:
+        conn.close()
+
+
+def add_appointment_for_clinic(data, clinic_id):
+    _require_postgres()
+
+    name = str(data.get("name") or "").strip()
+    age = str(data.get("age") or "").strip()
+    phone = str(data.get("phone") or "").strip()
+    date = normalize_date(str(data.get("date") or ""))
+    time = normalize_time(str(data.get("time") or ""))
+    service = str(
+        data.get("service") or "General Consultation"
+    ).strip()
+    doctor_id = data.get("doctor_id")
+
+    if not name or not date or not time:
+        return None, "Missing required fields"
+
+    if phone and not is_valid_indian_phone(phone):
+        return None, "Please provide a valid 10-digit Indian phone number."
+
+    if phone:
+        phone = clean_phone(phone)
+
+    clinic = get_clinic_by_id(clinic_id)
+
+    if not clinic or clinic["status"] != "active":
+        return None, "Clinic not found or inactive."
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        # Recheck the slot using this clinic's appointments only.
+        cursor.execute("""
+            SELECT time
+            FROM appointments
+            WHERE clinic_id = %s
+              AND LOWER(date) = LOWER(%s)
+              AND status = 'confirmed'
+        """, (clinic_id, date))
+
+        rows = cursor.fetchall()
+
+        if any(
+            normalize_time(str(row[0])) == time
+            for row in rows
+        ):
+            return None, (
+                f"Sorry, the slot on {date} at {time} "
+                "is already booked. Please choose another time."
+            )
+
+        cursor.execute("""
+            INSERT INTO appointments
+                (clinic_id, doctor_id, name, age, phone,
+                 date, time, service, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'confirmed')
+            RETURNING id
+        """, (
+            clinic_id, doctor_id, name, age, phone,
+            date, time, service
+        ))
+
+        appointment_id = cursor.fetchone()[0]
+        conn.commit()
+
+        return {
+            "id": appointment_id,
+            "clinic_id": clinic_id,
+            "doctor_id": doctor_id,
+            "name": name,
+            "age": age,
+            "phone": phone,
+            "date": date,
+            "time": time,
+            "service": service,
+            "status": "confirmed",
+        }, None
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def get_appointments_for_clinic(clinic_id):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, age, phone, date, time,
+                   service, status, created_at, doctor_id
+            FROM appointments
+            WHERE clinic_id = %s
+            ORDER BY created_at DESC
+        """, (clinic_id,))
+
+        rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row[0],
+                "name": row[1],
+                "age": row[2],
+                "phone": row[3],
+                "date": row[4],
+                "time": row[5],
+                "service": row[6],
+                "status": row[7],
+                "created_at": str(row[8]),
+                "doctor_id": row[9],
+                "clinic_id": clinic_id,
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
+
+
+def get_available_slots_for_clinic(clinic_id, date):
+    _require_postgres()
+
+    normalized_date = normalize_date(date)
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT time
+            FROM appointments
+            WHERE clinic_id = %s
+              AND LOWER(date) = LOWER(%s)
+              AND status = 'confirmed'
+        """, (clinic_id, normalized_date))
+
+        rows = cursor.fetchall()
+
+        booked_times = {
+            normalize_time(str(row[0]))
+            for row in rows
+        }
+
+    finally:
+        conn.close()
+
+    available_slots = []
+
+    for hour in range(10, 13):
+        for minute in (0, 30):
+            slot = f"{hour:02d}:{minute:02d}"
+            formatted = datetime.strptime(
+                slot, "%H:%M"
+            ).strftime("%I:%M %p").lstrip("0")
+
+            if formatted not in booked_times:
+                available_slots.append(formatted)
+
+    for hour in range(14, 21):
+        for minute in (0, 30):
+            slot = f"{hour:02d}:{minute:02d}"
+            formatted = datetime.strptime(
+                slot, "%H:%M"
+            ).strftime("%I:%M %p").lstrip("0")
+
+            if formatted not in booked_times:
+                available_slots.append(formatted)
+
+    return available_slots
+
+
+def cancel_appointment_for_clinic(appointment_id, clinic_id):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE appointments
+            SET status = 'cancelled'
+            WHERE id = %s AND clinic_id = %s
+        """, (appointment_id, clinic_id))
+
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def permanently_delete_appointment_for_clinic(
+    appointment_id, clinic_id
+):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            DELETE FROM appointments
+            WHERE id = %s AND clinic_id = %s
+        """, (appointment_id, clinic_id))
+
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# ============================================================
+# MULTI-CLINIC DOCTOR MANAGEMENT
+# ============================================================
+
+def get_doctors_for_clinic(clinic_id, active_only=False):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        query = """
+            SELECT id, clinic_id, name, qualification,
+                   specialization, experience, is_active, created_at
+            FROM doctors
+            WHERE clinic_id = %s
+        """
+
+        if active_only:
+            query += " AND is_active = TRUE"
+
+        query += " ORDER BY name ASC"
+
+        cursor.execute(query, (clinic_id,))
+        rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row[0],
+                "clinic_id": row[1],
+                "name": row[2],
+                "qualification": row[3],
+                "specialization": row[4],
+                "experience": row[5],
+                "is_active": row[6],
+                "created_at": str(row[7]),
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
+
+
+def add_doctor_for_clinic(
+    clinic_id,
+    name,
+    qualification="",
+    specialization="",
+    experience=""
+):
+    _require_postgres()
+
+    name = str(name or "").strip()
+
+    if not name:
+        return None, "Doctor name is required."
+
+    clinic = get_clinic_by_id(clinic_id)
+
+    if not clinic or clinic["status"] != "active":
+        return None, "Clinic not found or inactive."
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO doctors (
+                clinic_id, name, qualification,
+                specialization, experience, is_active
+            )
+            VALUES (%s, %s, %s, %s, %s, TRUE)
+            RETURNING id, clinic_id, name, qualification,
+                      specialization, experience, is_active, created_at
+        """, (
+            clinic_id,
+            name,
+            str(qualification or "").strip(),
+            str(specialization or "").strip(),
+            str(experience or "").strip(),
+        ))
+
+        row = cursor.fetchone()
+        conn.commit()
+
+        return {
+            "id": row[0],
+            "clinic_id": row[1],
+            "name": row[2],
+            "qualification": row[3],
+            "specialization": row[4],
+            "experience": row[5],
+            "is_active": row[6],
+            "created_at": str(row[7]),
+        }, None
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def update_doctor_for_clinic(
+    doctor_id,
+    clinic_id,
+    name,
+    qualification="",
+    specialization="",
+    experience=""
+):
+    _require_postgres()
+
+    name = str(name or "").strip()
+
+    if not name:
+        return False, "Doctor name is required."
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE doctors
+            SET name = %s,
+                qualification = %s,
+                specialization = %s,
+                experience = %s
+            WHERE id = %s AND clinic_id = %s
+        """, (
+            name,
+            str(qualification or "").strip(),
+            str(specialization or "").strip(),
+            str(experience or "").strip(),
+            doctor_id,
+            clinic_id,
+        ))
+
+        updated = cursor.rowcount > 0
+        conn.commit()
+
+        return updated, None if updated else "Doctor not found."
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def set_doctor_active_for_clinic(
+    doctor_id,
+    clinic_id,
+    is_active
+):
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE doctors
+            SET is_active = %s
+            WHERE id = %s AND clinic_id = %s
+        """, (bool(is_active), doctor_id, clinic_id))
+
+        updated = cursor.rowcount > 0
+        conn.commit()
+
+        return updated
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+
+
+def get_all_clinics():
+    """Return all clinics with their saved settings."""
+    _require_postgres()
+
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT
+                c.id,
+                c.name,
+                c.slug,
+                c.status,
+                COALESCE(cs.settings->>'clinic_type', '') AS type,
+                COALESCE(cs.settings->>'address', '') AS address,
+                COALESCE(cs.settings->>'phone', '') AS phone,
+                COALESCE(cs.settings->>'email', '') AS email,
+                COALESCE(cs.settings->>'website', '') AS website
+            FROM clinics c
+            LEFT JOIN clinic_settings cs
+                ON cs.clinic_id = c.id
+            ORDER BY c.id DESC
+        """)
+
+        rows = cur.fetchall()
+        columns = [col[0] for col in cur.description]
+
+        return [
+            dict(zip(columns, row))
+            for row in rows
+        ]
+
+    finally:
+        conn.close()
+
+
+
+
+def create_clinic(
+    name,
+    clinic_type="",
+    address="",
+    phone="",
+    email="",
+    website="",
+    status="active"
+):
+    """Create a clinic and initialize its settings and chatbot configuration."""
+    _require_postgres()
+
+    import re
+    import json
+
+    name = str(name).strip()
+    if not name:
+        raise ValueError("Clinic name is required.")
+
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+    if not slug:
+        raise ValueError("Could not generate a valid clinic URL.")
+
+    status = str(status).strip().lower()
+    if status not in ("active", "inactive"):
+        raise ValueError("Status must be active or inactive.")
+
+    settings = {
+    "clinic_name": name,
+    "clinic_type": clinic_type,
+    "address": address,
+    "phone": phone,
+    "email": email,
+    "website": website,
+
+    "weekday_hours": "Monday to Saturday: 9:00 AM to 8:00 PM",
+    "sunday_hours": "Sunday: 10:00 AM to 2:00 PM",
+
+    "open_hour": 9,
+    "close_hour": 20,
+
+    "services": [],
+    "payment": "Cash, UPI, All major cards accepted",
+    "parking": "Available"
+}
+
+    conn = get_connection()
+
+    try:
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO clinics (name, slug, status)
+            VALUES (%s, %s, %s)
+            RETURNING id, name, slug, status
+        """, (name, slug, status))
+
+        row = cur.fetchone()
+        columns = [col[0] for col in cur.description]
+        clinic = dict(zip(columns, row))
+
+        clinic_id = clinic["id"]
+
+        cur.execute("""
+            INSERT INTO clinic_settings (clinic_id, settings)
+            VALUES (%s, %s::jsonb)
+            ON CONFLICT (clinic_id)
+            DO UPDATE SET settings = EXCLUDED.settings
+        """, (clinic_id, json.dumps(settings)))
+
+        cur.execute("""
+            INSERT INTO chatbot_configs (clinic_id, config, is_enabled)
+            VALUES (%s, %s::jsonb, TRUE)
+            ON CONFLICT (clinic_id) DO NOTHING
+        """, (clinic_id, json.dumps({})))
+
+        conn.commit()
+        return clinic
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
+def update_clinic_status(clinic_id, status):
+    """Activate or deactivate a clinic."""
+    _require_postgres()
+
+    status = str(status).strip().lower()
+    if status not in ("active", "inactive"):
+        raise ValueError("Invalid clinic status.")
+
+    conn = get_connection()
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE clinics
+            SET status = %s
+            WHERE id = %s
+            RETURNING id, name, slug, status
+        """, (status, clinic_id))
+
+        row = cur.fetchone()
+
+        if not row:
+            conn.rollback()
+            return None
+
+        columns = [col[0] for col in cur.description]
+        result = dict(zip(columns, row))
+
+        conn.commit()
+        return result
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()

@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotA | Master Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #18b9a7;
+      --primary-dark: #087f77;
+      --dark: #102d33;
+      --sidebar: #102c32;
+      --bg: #f4f8f9;
+      --white: #ffffff;
+      --text: #20383e;
+      --muted: #82949a;
+      --border: #e6edef;
+      --green: #159b71;
+      --red: #df6262;
+      --orange: #df9b3d;
+      --blue: #548bd5;
+      --shadow: 0 5px 24px rgba(22, 57, 63, .05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit
+    }
+
+    button {
+      cursor: pointer
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 255px;
+      background: var(--sidebar);
+      color: white;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: .25s;
+    }
+
+    .brand {
+      padding: 25px 23px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .brand-logo {
+      width: 39px;
+      height: 39px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #073d3a;
+      display: grid;
+      place-items: center;
+      font: 700 23px 'Space Grotesk';
+    }
+
+    .brand-name {
+      font: 700 22px 'Space Grotesk';
+      letter-spacing: -1px;
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      color: #8da9aa;
+      letter-spacing: 2px;
+      margin-top: 2px;
+    }
+
+    .nav-scroll {
+      padding: 17px 12px;
+      overflow-y: auto;
+      flex: 1
+    }
+
+    .nav-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      color: #6f9296;
+      padding: 15px 12px 8px;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #a8bec0;
+      text-align: left;
+      font-size: 13px;
+      margin: 2px 0;
+      transition: .2s;
+    }
+
+    .nav-item i {
+      width: 17px;
+      height: 17px
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, .07);
+      color: white
+    }
+
+    .nav-item.active {
+      color: white;
+      background: rgba(24, 185, 167, .16);
+      box-shadow: inset 3px 0 var(--primary);
+    }
+
+    .sidebar-bottom {
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      padding: 16px;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #28615f;
+      color: #9cf4e5;
+      font-weight: 700;
+    }
+
+    .profile-name {
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .profile-role {
+      font-size: 10px;
+      color: #8ca6a9;
+      margin-top: 3px
+    }
+
+    /* MAIN */
+
+    .main {
+      margin-left: 255px;
+      width: calc(100% - 255px);
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 73px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .page-heading {
+      font: 600 19px 'Space Grotesk';
+      letter-spacing: -.4px;
+    }
+
+    .breadcrumb {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: white;
+      width: 37px;
+      height: 37px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: #60757a;
+      position: relative;
+    }
+
+    .icon-btn i {
+      width: 17px;
+      height: 17px
+    }
+
+    .notification-dot {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ed6969;
+      top: 7px;
+      right: 7px;
+    }
+
+    .menu-toggle {
+      display: none
+    }
+
+    .content {
+      padding: 29px 32px 50px;
+      max-width: 1600px;
+      margin: auto
+    }
+
+    .page-intro {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .page-intro h2 {
+      font: 600 23px 'Space Grotesk';
+      letter-spacing: -.7px;
+    }
+
+    .page-intro p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 7px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn i {
+      width: 15px;
+      height: 15px
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #073d39
+    }
+
+    .btn-primary:hover {
+      background: #12a996
+    }
+
+    .btn-dark {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: white
+    }
+
+    .btn-danger {
+      color: var(--red);
+      border-color: #f2dada
+    }
+
+    .btn-small {
+      padding: 7px 10px;
+      font-size: 11px
+    }
+
+    /* CARDS */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 23px;
+    }
+
+    .stat-card,
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card {
+      padding: 19px
+    }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+    }
+
+    .stat-icon i {
+      width: 19px;
+      height: 19px
+    }
+
+    .c-teal {
+      background: #e0f7f2;
+      color: #119d8c
+    }
+
+    .c-blue {
+      background: #e9f0ff;
+      color: #5685d0
+    }
+
+    .c-orange {
+      background: #fff3e2;
+      color: #d79a3e
+    }
+
+    .c-purple {
+      background: #f1eafa;
+      color: #9a72c7
+    }
+
+    .c-red {
+      background: #ffeded;
+      color: #d96c6c
+    }
+
+    .stat-number {
+      font: 700 27px 'Space Grotesk';
+      margin-top: 16px;
+    }
+
+    .stat-title {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px
+    }
+
+    .stat-foot {
+      font-size: 10px;
+      color: var(--green);
+      margin-top: 10px
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      padding: 20px;
+      margin-bottom: 19px;
+      min-width: 0
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      font: 600 14px 'Space Grotesk'
+    }
+
+    .panel-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    /* TABLES */
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 13px;
+      background: #f7fafb;
+      color: #84959a;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 13px;
+      border-bottom: 1px solid #edf1f2;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    .primary-cell {
+      font-weight: 700;
+      color: #28454b
+    }
+
+    .secondary-cell {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .status:before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    .status.active {
+      background: #e5f7ef;
+      color: #16845f
+    }
+
+    .status.inactive {
+      background: #f0f2f3;
+      color: #77878b
+    }
+
+    .status.pending {
+      background: #fff3df;
+      color: #c28a34
+    }
+
+    .status.error {
+      background: #ffeded;
+      color: #d25d5d
+    }
+
+    .table-action {
+      border: 0;
+      background: transparent;
+      color: #6d858b;
+      padding: 5px;
+    }
+
+    .table-action i {
+      width: 15px;
+      height: 15px
+    }
+
+    .search-input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      outline: none;
+      font-size: 11px;
+      background: white;
+      min-width: 170px;
+    }
+
+    .search-input:focus,
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* QUICK ACTIONS */
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .quick-action {
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 14px;
+      border-radius: 9px;
+      text-align: left;
+      color: var(--text);
+      display: flex;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .quick-action:hover {
+      border-color: var(--primary);
+      background: #f6fffd
+    }
+
+    .quick-action i {
+      color: var(--primary-dark);
+      width: 19px;
+      height: 19px
+    }
+
+    .quick-action strong {
+      font-size: 11px;
+      display: block
+    }
+
+    .quick-action small {
+      font-size: 9px;
+      color: var(--muted);
+      display: block;
+      margin-top: 4px
+    }
+
+    /* FORMS */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 17px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px
+    }
+
+    .field.full {
+      grid-column: 1/-1
+    }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #536a70
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 12px;
+      outline: none;
+      background: white;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical
+    }
+
+    .field small {
+      font-size: 10px;
+      color: var(--muted)
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px
+    }
+
+    /* CONTENT BLOCKS */
+
+    .empty-state {
+      text-align: center;
+      padding: 38px 15px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty-state i {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 12px;
+      color: #a4b7ba
+    }
+
+    .empty-state p {
+      margin-top: 6px;
+      font-size: 10px
+    }
+
+    .info-card {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .info-card h4 {
+      font-size: 12px;
+      margin-bottom: 7px
+    }
+
+    .info-card p {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.7
+    }
+
+    .info-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #e2f7f3;
+      color: #159d8d;
+      display: grid;
+      place-items: center;
+      margin-bottom: 12px;
+    }
+
+    .info-icon i {
+      width: 16px;
+      height: 16px
+    }
+
+    .progress {
+      height: 7px;
+      background: #edf2f3;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 10px
+    }
+
+    .notice {
+      border: 1px solid #f1e4c8;
+      background: #fffaf0;
+      color: #927039;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .toggle {
+      width: 37px;
+      height: 21px;
+      border-radius: 20px;
+      background: #ccd7d9;
+      border: 0;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .toggle:after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: white;
+      border-radius: 50%;
+      left: 3px;
+      top: 3px;
+      transition: .2s;
+    }
+
+    .toggle.on {
+      background: var(--primary)
+    }
+
+    .toggle.on:after {
+      left: 19px
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child {
+      border-bottom: 0
+    }
+
+    .setting-row strong {
+      font-size: 11px
+    }
+
+    .setting-row p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    /* MODAL */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 30, 35, .45);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex
+    }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 550px;
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .16);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-head h3 {
+      font: 600 17px 'Space Grotesk'
+    }
+
+    .close-modal {
+      border: 0;
+      background: none;
+      color: #75898e
+    }
+
+    /* TOAST */
+
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #153d40;
+      color: white;
+      padding: 13px 18px;
+      border-radius: 9px;
+      font-size: 12px;
+      box-shadow: var(--shadow);
+      z-index: 300;
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+      animation: fadein .2s
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block
+    }
+
+    /* MOBILE */
+
+    @media(max-width:1100px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .grid-three {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    @media(max-width:760px) {
+      .sidebar {
+        transform: translateX(-100%)
+      }
+
+      .sidebar.open {
+        transform: translateX(0)
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%
+      }
+
+      .menu-toggle {
+        display: grid
+      }
+
+      .topbar {
+        padding: 0 15px
+      }
+
+      .content {
+        padding: 22px 15px
+      }
+
+      .grid-two {
+        grid-template-columns: 1fr
+      }
+
+      .grid-three {
+        grid-template-columns: 1fr
+      }
+
+      .page-intro {
+        flex-direction: column
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .field.full {
+        grid-column: auto
+      }
+
+      .top-right .profile-top {
+        display: none
+      }
+    }
+
+    @media(max-width:420px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 9px
+      }
+
+      .stat-card {
+        padding: 13px
+      }
+
+      .stat-number {
+        font-size: 22px
+      }
+
+      .quick-grid {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <!-- MASTER ADMIN LOGIN -->
+
+  <div id="loginScreen" style="
+position:fixed;
+inset:0;
+z-index:1000;
+background:#102d33;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+">
+
+    <div style="
+    width:100%;
+    max-width:410px;
+    background:white;
+    padding:38px;
+    border-radius:18px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+    ">
+
+      <div style="text-align:center;margin-bottom:30px">
+        <div style="
+            width:55px;height:55px;
+            margin:auto;
+            border-radius:15px;
+            background:#18b9a7;
+            color:#073d39;
+            display:grid;
+            place-items:center;
+            font:700 30px 'Space Grotesk';
+            ">B</div>
+
+        <h2 style="font:700 25px 'Space Grotesk';margin-top:15px;color:#102d33">BotA</h2>
+        <p style="font-size:11px;color:#82949a;letter-spacing:2px;margin-top:5px">MASTER ADMIN PORTAL</p>
+      </div>
+
+      <h3 style="font:600 18px 'Space Grotesk';margin-bottom:7px">Welcome back</h3>
+      <p style="font-size:12px;color:#82949a;margin-bottom:24px">Sign in to manage your BotA platform.</p>
+
+      <form id="loginForm">
+
+        <div class="field" style="margin-bottom:17px">
+          <label>Login ID</label>
+          <input type="text" id="masterUsername" placeholder="Enter your login ID" required>
+        </div>
+
+        <div class="field" style="margin-bottom:12px">
+          <label>Password</label>
+          <input type="password" id="masterPassword" placeholder="Enter your password" required>
+        </div>
+
+        <p id="loginError" style="color:#df6262;font-size:11px;margin-bottom:12px;display:none">
+          Invalid Login ID or Password.
+        </p>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:13px">
+          Sign In →
+        </button>
+
+      </form>
+
+      <p style="font-size:10px;color:#a0afb2;text-align:center;margin-top:25px">
+        BotA Platform Administration
+      </p>
+
+    </div>
+  </div>
+
+  <div class="app" id="adminApp" style="display:none">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">B</div>
+        <div>
+          <div class="brand-name">BotA</div>
+          <div class="brand-sub">MASTER CONTROL</div>
+        </div>
+      </div>
+
+      <div class="nav-scroll">
+
+        <div class="nav-label">MAIN MENU</div>
+        <button class="nav-item active" data-page="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+        <button class="nav-item" data-page="clinics"><i data-lucide="hospital"></i> Clinic Management</button>
+        <button class="nav-item" data-page="add-clinic"><i data-lucide="plus-circle"></i> Add New Clinic</button>
+
+        <div class="nav-label">MANAGEMENT</div>
+        <button class="nav-item" data-page="doctors"><i data-lucide="stethoscope"></i> Doctor Management</button>
+        <button class="nav-item" data-page="chatbots"><i data-lucide="bot"></i> Chatbot Management</button>
+        <button class="nav-item" data-page="appointments"><i data-lucide="calendar-check"></i> Appointment
+          Management</button>
+        <button class="nav-item" data-page="admins"><i data-lucide="users"></i> Admin Management</button>
+        <button class="nav-item" data-page="conversations"><i data-lucide="messages-square"></i> Conversations</button>
+
+        <div class="nav-label">PLATFORM</div>
+        <button class="nav-item" data-page="monitoring"><i data-lucide="activity"></i> Platform Monitoring</button>
+        <button class="nav-item" data-page="analytics"><i data-lucide="chart-no-axes-combined"></i> Analytics</button>
+        <button class="nav-item" data-page="logs"><i data-lucide="history"></i> Activity Logs</button>
+        <button class="nav-item" data-page="integrations"><i data-lucide="plug"></i> API & Integrations</button>
+        <button class="nav-item" data-page="notifications"><i data-lucide="bell"></i> Notifications & Alerts</button>
+
+        <div class="nav-label">CONFIGURATION</div>
+        <button class="nav-item" data-page="settings"><i data-lucide="settings"></i> Platform Settings</button>
+        <button class="nav-item" data-page="security"><i data-lucide="shield-check"></i> Security & Access</button>
+        <button class="nav-item" data-page="subscriptions"><i data-lucide="credit-card"></i> Subscriptions</button>
+        <button class="nav-item" data-page="support"><i data-lucide="headset"></i> Support & Issues</button>
+        <button class="nav-item" data-page="backup"><i data-lucide="database"></i> Backup & Database</button>
+
+      </div>
+
+
+      <div class="sidebar-bottom">
+        <div class="profile">
+          <div class="avatar">M</div>
+          <div style="flex:1">
+            <div class="profile-name">Master Administrator</div>
+            <div class="profile-role">Platform Owner</div>
+          </div>
+        </div>
+
+        <button class="nav-item" onclick="logoutMasterAdmin()" style="margin-top:14px">
+          <i data-lucide="log-out"></i>
+          Logout
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main">
+
+      <header class="topbar">
+        <div class="top-left">
+          <button class="icon-btn menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+          <div>
+            <div class="page-heading" id="topTitle">Dashboard</div>
+            <div class="breadcrumb">BotA / <span id="breadcrumb">Dashboard</span></div>
+          </div>
+        </div>
+
+        <div class="top-right">
+          <button class="icon-btn" onclick="navigate('notifications')" title="Notifications">
+            <i data-lucide="bell"></i><span class="notification-dot"></span>
+          </button>
+          <button class="icon-btn" onclick="navigate('settings')" title="Settings">
+            <i data-lucide="settings"></i>
+          </button>
+          <div class="profile-top">
+            <div class="avatar">M</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- DASHBOARD -->
+
+        <section class="page active" id="page-dashboard">
+
+          <div class="page-intro">
+            <div>
+              <h2>Platform Overview</h2>
+              <p>Monitor and manage your entire BotA clinic network.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" onclick="showToast('Dashboard refreshed')"><i data-lucide="refresh-cw"></i>
+                Refresh</button>
+              <button class="btn btn-primary" onclick="navigate('add-clinic')"><i data-lucide="plus"></i> Add New
+                Clinic</button>
+            </div>
+          </div>
+
+          <div class="notice">
+            <strong>Prototype mode:</strong> This dashboard currently uses browser storage and sample platform metrics.
+            Live clinic data and system monitoring will be connected through the backend.
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-top"><span class="stat-title">Total Clinics</span><span class="stat-icon c-teal"><i
+                    data-lucide="hospital"></i></span></div>
+              <div class="stat-number" id="totalClinics">0</div>
+              <div class="stat-foot">Registered clinics</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span class="stat-title">Active Clinics</span><span class="stat-icon c-blue"><i
+                    data-lucide="check-circle"></i></span></div>
+              <div class="stat-number" id="activeClinics">0</div>
+              <div class="stat-foot">Currently activated</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span class="stat-title">Clinic Admins</span><span class="stat-icon c-orange"><i
+                    data-lucide="users"></i></span></div>
+              <div class="stat-number" id="totalAdmins">0</div>
+              <div class="stat-foot">Registered administrators</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span class="stat-title">Doctors</span><span class="stat-icon c-purple"><i
+                    data-lucide="stethoscope"></i></span></div>
+              <div class="stat-number" id="totalDoctors">0</div>
+              <div class="stat-foot">Added to clinic records</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Recently Added Clinics</div>
+                  <div class="panel-sub">Latest clinic registrations</div>
+                </div>
+                <button class="btn btn-small" onclick="navigate('clinics')">View All</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>CLINIC</th>
+                      <th>CLINIC ID</th>
+                      <th>STATUS</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentClinics"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Quick Actions</div>
+                  <div class="panel-sub">Frequently used controls</div>
+                </div>
+              </div>
+              <div class="quick-grid">
+                <button class="quick-action" onclick="navigate('add-clinic')"><i
+                    data-lucide="plus-circle"></i><span><strong>Add Clinic</strong><small>Register a new
+                      clinic</small></span></button>
+                <button class="quick-action" onclick="navigate('admins')"><i
+                    data-lucide="user-plus"></i><span><strong>Add Admin</strong><small>Create admin
+                      access</small></span></button>
+                <button class="quick-action" onclick="navigate('doctors')"><i
+                    data-lucide="stethoscope"></i><span><strong>Manage Doctors</strong><small>View doctor
+                      records</small></span></button>
+                <button class="quick-action" onclick="navigate('chatbots')"><i
+                    data-lucide="bot"></i><span><strong>Manage Chatbots</strong><small>Configure clinic
+                      bots</small></span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Platform Health</div>
+                <div class="panel-sub">Live status will be connected to backend monitoring</div>
+              </div>
+              <span class="status pending">Awaiting integration</span>
+            </div>
+            <div class="grid-three">
+              <div class="info-card">
+                <h4>API Status</h4>
+                <p>FastAPI service health and response monitoring.</p>
+                <div class="progress"><span style="width:0%"></span></div>
+              </div>
+              <div class="info-card">
+                <h4>Database</h4>
+                <p>Database connection, latency and availability.</p>
+                <div class="progress"><span style="width:0%"></span></div>
+              </div>
+              <div class="info-card">
+                <h4>AI Services</h4>
+                <p>Gemini API connection and error monitoring.</p>
+                <div class="progress"><span style="width:0%"></span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CLINICS -->
+
+        <section class="page" id="page-clinics">
+          <div class="page-intro">
+            <div>
+              <h2>Clinic Management</h2>
+              <p>Manage every clinic registered on BotA.</p>
+            </div>
+            <button class="btn btn-primary" onclick="navigate('add-clinic')"><i data-lucide="plus"></i> Add
+              Clinic</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">All Clinics</div>
+                <div class="panel-sub">Clinic accounts and activation status</div>
+              </div>
+              <input class="search-input" id="clinicSearch" placeholder="Search clinics..." oninput="renderClinics()">
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>CLINIC</th>
+                    <th>CLINIC ID</th>
+                    <th>EMAIL</th>
+                    <th>PHONE</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody id="clinicTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADD CLINIC -->
+
+        <section class="page" id="page-add-clinic">
+          <div class="page-intro">
+            <div>
+              <h2>Register New Clinic</h2>
+              <p>Create a clinic profile and configure its initial access.</p>
+            </div>
+          </div>
+          <div class="notice">Creating a clinic in this prototype saves a local record only. Real clinic provisioning,
+            admin creation and chatbot URL generation require backend integration.</div>
+          <form class="panel" id="clinicForm">
+            <div class="panel-head">
+              <div class="panel-title">Basic Clinic Information</div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label>Clinic Name *</label><input name="name" required
+                  placeholder="e.g. Smile Care Dental Clinic"></div>
+              <div class="field"><label>Clinic Type *</label><select name="type" required>
+                  <option value="">Select type</option>
+                  <option>Dental</option>
+                  <option>General Practice</option>
+                  <option>Dermatology</option>
+                  <option>Eye Care</option>
+                  <option>Physiotherapy</option>
+                  <option>Multi-speciality</option>
+                  <option>Other</option>
+                </select></div>
+              <div class="field full"><label>Clinic Address *</label><textarea name="address" required
+                  placeholder="Full clinic address"></textarea></div>
+              <div class="field"><label>Clinic Phone *</label><input name="phone" required placeholder="+91..."></div>
+              <div class="field"><label>Clinic Email *</label><input name="email" type="email" required
+                  placeholder="clinic@example.com"></div>
+              <div class="field"><label>Website</label><input name="website" placeholder="https://example.com"></div>
+              <div class="field"><label>Initial Status</label><select name="status">
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select></div>
+            </div>
+            <div class="panel-head" style="margin-top:28px">
+              <div class="panel-title">Primary Clinic Administrator</div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label>Admin Name *</label><input name="adminName" required
+                  placeholder="Administrator name"></div>
+              <div class="field"><label>Admin Email *</label><input name="adminEmail" type="email" required
+                  placeholder="admin@example.com"></div>
+            </div>
+            <div class="form-actions"><button type="reset" class="btn">Reset</button><button type="submit"
+                class="btn btn-primary"><i data-lucide="plus"></i> Create Clinic</button></div>
+          </form>
+        </section>
+
+        <!-- DOCTORS -->
+
+        <section class="page" id="page-doctors">
+          <div class="page-intro">
+            <div>
+              <h2>Doctor Management</h2>
+              <p>View and manage doctor profiles across all clinics.</p>
+            </div><button class="btn btn-primary" onclick="openDoctorModal()"><i data-lucide="plus"></i> Add
+              Doctor</button>
+          </div>
+          <div class="notice">Doctor availability and doctor-specific booking controls will be connected to the clinic
+            scheduling backend.</div>
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Doctor Directory</div><input class="search-input" id="doctorSearch"
+                placeholder="Search doctors..." oninput="renderDoctors()">
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>DOCTOR</th>
+                    <th>CLINIC</th>
+                    <th>QUALIFICATION</th>
+                    <th>SPECIALITY</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="doctorTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- CHATBOTS -->
+
+        <section class="page" id="page-chatbots">
+          <div class="page-intro">
+            <div>
+              <h2>Chatbot Management</h2>
+              <p>Control the chatbot experience for every registered clinic.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Total Chatbots</div>
+              <div class="stat-number" id="botCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Active Chatbots</div>
+              <div class="stat-number">—</div>
+              <div class="stat-foot">Backend integration pending</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Conversations</div>
+              <div class="stat-number">—</div>
+              <div class="stat-foot">Live metrics pending</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Booking Errors</div>
+              <div class="stat-number">—</div>
+              <div class="stat-foot">Live metrics pending</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Clinic Chatbots</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>CLINIC</th>
+                    <th>CHATBOT ID</th>
+                    <th>CHATBOT URL</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody id="botTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="grid-two">
+            <div class="panel">
+              <div class="panel-title">Appearance & Branding</div>
+              <div class="setting-row">
+                <div><strong>Chatbot display name</strong>
+                  <p>Set the name shown to patients.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+              <div class="setting-row">
+                <div><strong>Theme and logo</strong>
+                  <p>Set clinic branding and chatbot avatar.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+              <div class="setting-row">
+                <div><strong>Welcome message</strong>
+                  <p>Configure the initial greeting.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">AI Behaviour & Knowledge</div>
+              <div class="setting-row">
+                <div><strong>Language and tone</strong>
+                  <p>English, Hindi and Hinglish.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+              <div class="setting-row">
+                <div><strong>Clinic knowledge base</strong>
+                  <p>Clinic details, doctors, services and FAQs.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+              <div class="setting-row">
+                <div><strong>Booking behaviour</strong>
+                  <p>Doctor selection, slots and appointment rules.</p>
+                </div><button class="btn btn-small"
+                  onclick="showToast('Connect chatbot configuration backend')">Configure</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Testing & Logs</div>
+            <div class="grid-three" style="margin-top:16px">
+              <div class="info-card">
+                <h4>Test Chat</h4>
+                <p>Preview the chatbot before making changes live.</p><button class="btn btn-small"
+                  style="margin-top:12px" onclick="showToast('Chat preview requires a configured chatbot')">Open
+                  Preview</button>
+              </div>
+              <div class="info-card">
+                <h4>Unanswered Questions</h4>
+                <p>Identify questions the AI could not answer.</p><button class="btn btn-small" style="margin-top:12px"
+                  onclick="navigate('conversations')">View Conversations</button>
+              </div>
+              <div class="info-card">
+                <h4>API & Booking Errors</h4>
+                <p>Investigate AI and appointment failures.</p><button class="btn btn-small" style="margin-top:12px"
+                  onclick="navigate('monitoring')">View Monitoring</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- APPOINTMENTS -->
+
+        <section class="page" id="page-appointments">
+          <div class="page-intro">
+            <div>
+              <h2>Appointment Management</h2>
+              <p>Monitor bookings across the clinic network.</p>
+            </div><button class="btn" onclick="showToast('Live appointment data requires backend integration')"><i
+                data-lucide="refresh-cw"></i> Refresh</button>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Total Appointments</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Upcoming</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Cancelled</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Failed Bookings</div>
+              <div class="stat-number">—</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Platform Appointment Overview</div><input class="search-input"
+                placeholder="Search appointments..."
+                oninput="showToast('Appointment search will work after backend integration')">
+            </div>
+            <div class="empty-state"><i data-lucide="calendar-days"></i>
+              <h3>No live appointment data</h3>
+              <p>Clinic-wise appointments will appear here after backend integration.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMINS -->
+
+        <section class="page" id="page-admins">
+          <div class="page-intro">
+            <div>
+              <h2>Admin Management</h2>
+              <p>Manage clinic administrator accounts and access.</p>
+            </div><button class="btn btn-primary" onclick="openAdminModal()"><i data-lucide="user-plus"></i> Add
+              Admin</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Administrator Directory</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ADMIN</th>
+                    <th>EMAIL</th>
+                    <th>CLINIC</th>
+                    <th>ROLE</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="adminTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="notice">Real account creation, invitations, password resets and permissions must be implemented
+            securely on the backend. Never store administrator passwords in browser storage.</div>
+        </section>
+
+        <!-- CONVERSATIONS -->
+
+        <section class="page" id="page-conversations">
+          <div class="page-intro">
+            <div>
+              <h2>Conversation Management</h2>
+              <p>Review patient interactions and chatbot performance.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Total Conversations</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Today</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Unanswered Queries</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Escalations</div>
+              <div class="stat-number">—</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Recent Conversations</div>
+            <div class="empty-state"><i data-lucide="messages-square"></i>
+              <h3>No conversation data connected</h3>
+              <p>Conversation records will be displayed here when the backend is connected.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- MONITORING -->
+
+        <section class="page" id="page-monitoring">
+          <div class="page-intro">
+            <div>
+              <h2>Platform Monitoring</h2>
+              <p>Monitor the operational health of the BotA platform.</p>
+            </div><button class="btn" onclick="showToast('Live monitoring is not connected yet')"><i
+                data-lucide="refresh-cw"></i> Check Status</button>
+          </div>
+          <div class="grid-three">
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="server"></i></div>
+              <h4>Backend API</h4>
+              <p>FastAPI availability, response time and failures.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="database"></i></div>
+              <h4>Database Health</h4>
+              <p>Connection status, queries and storage.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="brain-circuit"></i></div>
+              <h4>Gemini AI</h4>
+              <p>API response, failures and usage limits.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="calendar-x"></i></div>
+              <h4>Booking Errors</h4>
+              <p>Failed appointments and slot conflicts.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="message-circle-warning"></i></div>
+              <h4>Chatbot Errors</h4>
+              <p>AI failures and unanswered queries.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="clock"></i></div>
+              <h4>Uptime</h4>
+              <p>Service availability and downtime history.</p><span class="status pending">Not connected</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+
+        <section class="page" id="page-analytics">
+          <div class="page-intro">
+            <div>
+              <h2>Platform Analytics</h2>
+              <p>Understand usage and performance across all clinics.</p>
+            </div><select class="search-input">
+              <option>Last 30 days</option>
+              <option>Last 7 days</option>
+              <option>Last 90 days</option>
+            </select>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Total Patients</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Chatbot Interactions</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Booking Conversion</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Top Clinic</div>
+              <div class="stat-number" style="font-size:17px">—</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Platform Usage Trends</div>
+            <div class="empty-state"><i data-lucide="chart-no-axes-combined"></i>
+              <h3>Analytics not connected</h3>
+              <p>Usage graphs and clinic comparisons will appear here once event tracking is implemented.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- LOGS -->
+
+        <section class="page" id="page-logs">
+          <div class="page-intro">
+            <div>
+              <h2>Activity Logs</h2>
+              <p>Track important actions performed across the platform.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Audit Trail</div><button class="btn btn-small"
+                onclick="showToast('Export requires backend integration')">Export Logs</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>TIME</th>
+                    <th>USER</th>
+                    <th>ACTION</th>
+                    <th>MODULE</th>
+                    <th>DETAILS</th>
+                  </tr>
+                </thead>
+                <tbody id="logTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- INTEGRATIONS -->
+
+        <section class="page" id="page-integrations">
+          <div class="page-intro">
+            <div>
+              <h2>API & Integrations</h2>
+              <p>Manage external services connected to BotA.</p>
+            </div>
+          </div>
+          <div class="grid-three">
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="brain-circuit"></i></div>
+              <h4>Google Gemini API</h4>
+              <p>AI response generation and model configuration.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="database"></i></div>
+              <h4>Database</h4>
+              <p>PostgreSQL / Supabase database connection.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="mail"></i></div>
+              <h4>Email Service</h4>
+              <p>Admin invitations and patient notifications.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="message-square"></i></div>
+              <h4>WhatsApp</h4>
+              <p>Booking confirmations and reminders.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="globe"></i></div>
+              <h4>Custom Domains</h4>
+              <p>Clinic chatbot URL and domain configuration.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="webhook"></i></div>
+              <h4>Webhooks</h4>
+              <p>External events and integration callbacks.</p><span class="status pending">Not connected</span>
+            </div>
+          </div>
+          <div class="notice">API keys and secrets must be stored securely on the server, never in this HTML or browser
+            local storage.</div>
+        </section>
+
+        <!-- NOTIFICATIONS -->
+
+        <section class="page" id="page-notifications">
+          <div class="page-intro">
+            <div>
+              <h2>Notifications & Alerts</h2>
+              <p>Platform alerts, system events and important updates.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="empty-state"><i data-lucide="bell-ring"></i>
+              <h3>No live alerts</h3>
+              <p>Notifications will appear here when event and alert services are connected.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Alert Preferences</div>
+            <div class="setting-row">
+              <div><strong>API failure alerts</strong>
+                <p>Notify when the platform API becomes unavailable.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><strong>AI service alerts</strong>
+                <p>Notify when Gemini API requests fail.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><strong>Booking failure alerts</strong>
+                <p>Notify when appointment creation fails.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><strong>New clinic alerts</strong>
+                <p>Notify when a new clinic is registered.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+
+        <section class="page" id="page-settings">
+          <div class="page-intro">
+            <div>
+              <h2>Platform Settings</h2>
+              <p>Configure global BotA platform preferences.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">General Configuration</div>
+            <form id="settingsForm" style="margin-top:18px">
+              <div class="form-grid">
+                <div class="field"><label>Platform Name</label><input value="BotA" name="platformName"></div>
+                <div class="field"><label>Platform Support Email</label><input type="email"
+                    placeholder="support@example.com" name="supportEmail"></div>
+                <div class="field"><label>Default Language</label><select>
+                    <option>English</option>
+                    <option>Hindi</option>
+                  </select></div>
+                <div class="field"><label>Default Timezone</label><select>
+                    <option>Asia/Kolkata</option>
+                    <option>UTC</option>
+                  </select></div>
+                <div class="field"><label>Default Chatbot Language</label><select>
+                    <option>English</option>
+                    <option>Hindi</option>
+                    <option>Hinglish</option>
+                  </select></div>
+                <div class="field"><label>Default AI Model</label><input value="Gemini" disabled></div>
+              </div>
+              <div class="form-actions"><button class="btn btn-primary" type="submit">Save Settings</button></div>
+            </form>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Global Preferences</div>
+            <div class="setting-row">
+              <div><strong>Allow new clinic registration</strong>
+                <p>Enable or disable clinic creation.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><strong>Default chatbot activation</strong>
+                <p>Set whether new chatbots start active.</p>
+              </div><button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><strong>Maintenance mode</strong>
+                <p>Restrict normal platform access during maintenance.</p>
+              </div><button class="toggle" onclick="this.classList.toggle('on')"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECURITY -->
+
+        <section class="page" id="page-security">
+          <div class="page-intro">
+            <div>
+              <h2>Security & Access</h2>
+              <p>Platform authentication, permissions and security policies.</p>
+            </div>
+          </div>
+          <div class="notice">Security controls shown here are configuration placeholders. Real authentication and
+            access enforcement must happen on the server.</div>
+          <div class="panel">
+            <div class="panel-title">Security Policies</div>
+            <div class="setting-row">
+              <div><strong>Secure administrator sessions</strong>
+                <p>Server-side sessions with expiry and revocation.</p>
+              </div><span class="status pending">Backend required</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Multi-factor authentication</strong>
+                <p>Additional verification for administrator accounts.</p>
+              </div><span class="status pending">Not configured</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Login attempt protection</strong>
+                <p>Rate limits and temporary account lockouts.</p>
+              </div><span class="status pending">Not configured</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Role-based permissions</strong>
+                <p>Separate master admin and clinic admin privileges.</p>
+              </div><span class="status pending">Backend required</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Tenant data isolation</strong>
+                <p>Prevent clinics from accessing other clinics' data.</p>
+              </div><span class="status pending">Backend required</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Access Management</div>
+            <p style="font-size:11px;color:var(--muted);margin-top:9px">Master Admin: full platform ownership. Clinic
+              Admin: access restricted to their assigned clinic. All permissions must be verified server-side.</p>
+          </div>
+        </section>
+
+        <!-- SUBSCRIPTIONS -->
+
+        <section class="page" id="page-subscriptions">
+          <div class="page-intro">
+            <div>
+              <h2>Subscription Management</h2>
+              <p>Future-ready subscription and billing administration.</p>
+            </div>
+          </div>
+          <div class="notice">Billing is intentionally deferred for the first version of BotA. This section is reserved
+            for future development.</div>
+          <div class="grid-three">
+            <div class="info-card">
+              <h4>Plans</h4>
+              <p>Create and manage pricing tiers.</p>
+            </div>
+            <div class="info-card">
+              <h4>Clinic Subscriptions</h4>
+              <p>Assign plans and monitor subscription status.</p>
+            </div>
+            <div class="info-card">
+              <h4>Payments</h4>
+              <p>Payment history, invoices and renewals.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SUPPORT -->
+
+        <section class="page" id="page-support">
+          <div class="page-intro">
+            <div>
+              <h2>Support & Issues</h2>
+              <p>Manage platform problems and clinic support requests.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Open Issues</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">In Progress</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Resolved</div>
+              <div class="stat-number">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Urgent</div>
+              <div class="stat-number">—</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Support Tickets</div>
+            <div class="empty-state"><i data-lucide="headset"></i>
+              <h3>No support tickets</h3>
+              <p>Support tickets will be displayed here after the support module is implemented.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- BACKUP -->
+
+        <section class="page" id="page-backup">
+          <div class="page-intro">
+            <div>
+              <h2>Backup & Database</h2>
+              <p>Database health, backup policies and data management.</p>
+            </div>
+          </div>
+          <div class="notice">Database backup and restore operations must be performed securely on the server. This
+            frontend does not access or modify the production database.</div>
+          <div class="grid-three">
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="database"></i></div>
+              <h4>Database Connection</h4>
+              <p>PostgreSQL / Supabase connectivity and performance.</p><span class="status pending">Not
+                connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="hard-drive"></i></div>
+              <h4>Storage Usage</h4>
+              <p>Monitor database and file storage capacity.</p><span class="status pending">Not connected</span>
+            </div>
+            <div class="info-card">
+              <div class="info-icon"><i data-lucide="shield"></i></div>
+              <h4>Backup Status</h4>
+              <p>Review automated backups and recovery points.</p><span class="status pending">Not configured</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Backup Configuration</div>
+            <div class="setting-row">
+              <div><strong>Automatic backups</strong>
+                <p>Schedule regular database backups.</p>
+              </div><span class="status pending">Not configured</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Backup retention</strong>
+                <p>Configure how long backups are retained.</p>
+              </div><span class="status pending">Not configured</span>
+            </div>
+            <div class="setting-row">
+              <div><strong>Disaster recovery</strong>
+                <p>Plan database restoration and recovery.</p>
+              </div><span class="status pending">Not configured</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+
+  <div class="modal-backdrop" id="modalBackdrop" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Add Record</h3><button class="close-modal" onclick="closeModal()"><i
+            data-lucide="x"></i></button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'bota_master_admin_prototype_v2';
+
+    let data = {
+      clinics: [],
+      doctors: [],
+      admins: [],
+      logs: []
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved) data = { ...data, ...saved };
+    } catch (e) { }
+
+    function saveData() {
+  // Clinic records now come from Supabase, not localStorage.
+  const localData = {
+    doctors: data.doctors,
+    admins: data.admins,
+    logs: data.logs
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
+  updateDashboard();
+}
+
+async function apiFetch(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.detail || result.message || 'Request failed');
+  }
+
+  return result;
+}
+
+async function loadClinics() {
+  try {
+    const result = await apiFetch('/api/master/clinics');
+
+    data.clinics = (result.clinics || []).map(c => ({
+      ...c,
+      id: Number(c.id),
+      type: c.type || c.clinic_type || '',
+      status: String(c.status).toLowerCase() === 'active'
+        ? 'Active'
+        : 'Inactive',
+      chatbotId: 'BOT-' + c.id,
+      chatbotUrl: ''
+    }));
+
+    updateDashboard();
+    renderClinics();
+    renderBots();
+
+  } catch (error) {
+    console.error('Clinic loading failed:', error);
+    showToast(error.message);
+  }
+}
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    function logAction(action, module, details) {
+      data.logs.unshift({
+        time: new Date().toLocaleString(),
+        user: 'Master Administrator',
+        action, module, details
+      });
+      data.logs = data.logs.slice(0, 100);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function navigate(page) {
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      const target = document.getElementById('page-' + page);
+      if (!target) return;
+
+      target.classList.add('active');
+      const nav = document.querySelector(`[data-page="${page}"]`);
+      if (nav) nav.classList.add('active');
+
+      const title = nav ? nav.textContent.trim() : 'Dashboard';
+      document.getElementById('topTitle').textContent = title;
+      document.getElementById('breadcrumb').textContent = title;
+
+      document.getElementById('sidebar').classList.remove('open');
+
+      if (page === 'clinics') renderClinics();
+      if (page === 'doctors') renderDoctors();
+      if (page === 'admins') renderAdmins();
+      if (page === 'chatbots') renderBots();
+      if (page === 'logs') renderLogs();
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    document.querySelectorAll('.nav-item').forEach(button => {
+      button.addEventListener('click', () => navigate(button.dataset.page));
+    });
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    /* DASHBOARD */
+
+    function updateDashboard() {
+      document.getElementById('totalClinics').textContent = data.clinics.length;
+      document.getElementById('activeClinics').textContent = data.clinics.filter(c => c.status === 'Active').length;
+      document.getElementById('totalAdmins').textContent = data.admins.length;
+      document.getElementById('totalDoctors').textContent = data.doctors.length;
+
+      document.getElementById('botCount').textContent = data.clinics.length;
+
+      const recent = data.clinics.slice(-5).reverse();
+      document.getElementById('recentClinics').innerHTML = recent.length ? recent.map(c => `
+        <tr>
+            <td><div class="primary-cell">${escapeHTML(c.name)}</div><div class="secondary-cell">${escapeHTML(c.type)}</div></td>
+            <td>${escapeHTML(c.id)}</td>
+            <td><span class="status ${c.status === 'Active' ? 'active' : 'inactive'}">${escapeHTML(c.status)}</span></td>
+            <td><button class="table-action" onclick="viewClinic('${c.id}')"><i data-lucide="eye"></i></button></td>
+        </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state">No clinics registered yet.</div></td></tr>`;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* CLINIC MANAGEMENT */
+
+    document.getElementById('clinicForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const form = new FormData(this);
+  const clinic = Object.fromEntries(form.entries());
+
+  const submitButton = this.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = 'Creating...';
+
+  try {
+    const result = await apiFetch('/api/master/clinics', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: clinic.name,
+        clinic_type: clinic.type,
+        address: clinic.address,
+        phone: clinic.phone,
+        email: clinic.email,
+        website: clinic.website,
+        status: (clinic.status || 'Active').toLowerCase()
+      })
+    });
+
+    await loadClinics();
+
+    logAction(
+      'Clinic created',
+      'Clinic Management',
+      result.clinic.name
+    );
+
+    saveData();
+    this.reset();
+
+    showToast('Clinic created successfully!');
+    navigate('clinics');
+
+  } catch (error) {
+    console.error('Clinic creation failed:', error);
+    showToast(error.message);
+
+  } finally {
+    submitButton.disabled = false;
+    submitButton.innerHTML = '<i data-lucide="plus"></i> Create Clinic';
+
+    if (window.lucide) lucide.createIcons();
+  }
+});
+
+    
+
+    
+function renderClinics() {
+  const search = (document.getElementById('clinicSearch')?.value || '').toLowerCase();
+
+  const list = data.clinics.filter(c =>
+    [c.name, c.id, c.email, c.phone, c.slug]
+      .some(v => String(v || '').toLowerCase().includes(search))
+  );
+
+  document.getElementById('clinicTable').innerHTML = list.length
+    ? list.map(c => `
+      <tr>
+        <td>
+          <div class="primary-cell">${escapeHTML(c.name)}</div>
+          <div class="secondary-cell">${escapeHTML(c.type || '')}</div>
+        </td>
+
+        <td>${escapeHTML(c.id)}</td>
+        <td>${escapeHTML(c.email || '—')}</td>
+        <td>${escapeHTML(c.phone || '—')}</td>
+
+        <td>
+          <span class="status ${c.status === 'Active' ? 'active' : 'inactive'}">
+            ${escapeHTML(c.status)}
+          </span>
+        </td>
+
+        <td>
+          <button class="table-action"
+            title="View"
+            onclick="viewClinic('${c.id}')">
+            <i data-lucide="eye"></i>
+          </button>
+
+          <button class="table-action"
+            title="Toggle status"
+            onclick="toggleClinic('${c.id}')">
+            <i data-lucide="power"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('')
+    : `<tr><td colspan="6"><div class="empty-state">No clinics found.</div></td></tr>`;
+
+  if (window.lucide) lucide.createIcons();
+}
+
+
+    function viewClinic(id) {
+      const c = data.clinics.find(x => x.id === id);
+      if (!c) return;
+
+      document.getElementById('modalTitle').textContent = 'Clinic Details';
+      document.getElementById('modalContent').innerHTML = `
+        <div class="info-card">
+            <h4>${escapeHTML(c.name)}</h4>
+            <p>Clinic ID: ${escapeHTML(c.id)}</p>
+            <p>Type: ${escapeHTML(c.type)}</p>
+            <p>Address: ${escapeHTML(c.address)}</p>
+            <p>Email: ${escapeHTML(c.email)}</p>
+            <p>Phone: ${escapeHTML(c.phone)}</p>
+            <p>Website: ${escapeHTML(c.website || 'Not provided')}</p>
+            <p>Status: ${escapeHTML(c.status)}</p>
+            <p>Chatbot URL: ${escapeHTML(c.chatbotUrl)}</p>
+        </div>
+        <div class="form-actions">
+            <button class="btn" onclick="navigate('chatbots');closeModal()">Chatbot Management</button>
+            <button class="btn btn-primary" onclick="showToast('Clinic admin portal access requires backend authentication');closeModal()">Open Clinic Portal</button>
+        </div>`;
+      openModal();
+    }
+
+    
+async function toggleClinic(id) {
+  const clinic = data.clinics.find(c => Number(c.id) === Number(id));
+  if (!clinic) return;
+
+  const newStatus = clinic.status === 'Active' ? 'inactive' : 'active';
+
+  try {
+    await apiFetch(`/api/master/clinics/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    logAction(
+      'Clinic status changed',
+      'Clinic Management',
+      clinic.name + ' → ' + (newStatus === 'active' ? 'Active' : 'Inactive')
+    );
+
+    await loadClinics();
+    saveData();
+
+    showToast('Clinic status updated successfully');
+
+  } catch (error) {
+    console.error('Clinic status update failed:', error);
+    showToast(error.message);
+  }
+}
+
+
+    function deleteClinic(id) {
+      if (!confirm('Delete this prototype clinic record?')) return;
+      const c = data.clinics.find(x => x.id === id);
+      data.clinics = data.clinics.filter(x => x.id !== id);
+      if (c) logAction('Clinic deleted', 'Clinic Management', c.name);
+      saveData();
+      renderClinics();
+      showToast('Prototype clinic record deleted');
+    }
+
+    /* DOCTOR MANAGEMENT */
+
+    function renderDoctors() {
+      const search = (document.getElementById('doctorSearch')?.value || '').toLowerCase();
+      const list = data.doctors.filter(d => [d.name, d.speciality, d.clinic].some(v => (v || '').toLowerCase().includes(search)));
+
+      document.getElementById('doctorTable').innerHTML = list.length ? list.map(d => `
+        <tr>
+            <td><div class="primary-cell">${escapeHTML(d.name)}</div><div class="secondary-cell">${escapeHTML(d.email || '')}</div></td>
+            <td>${escapeHTML(d.clinic)}</td>
+            <td>${escapeHTML(d.qualification)}</td>
+            <td>${escapeHTML(d.speciality)}</td>
+            <td><span class="status active">Active</span></td>
+            <td><button class="table-action" onclick="deleteDoctor('${d.id}')"><i data-lucide="trash-2"></i></button></td>
+        </tr>`).join('') : `<tr><td colspan="6"><div class="empty-state">No doctors added yet.</div></td></tr>`;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openDoctorModal() {
+      if (!data.clinics.length) { showToast('Create a clinic first'); return; }
+
+      document.getElementById('modalTitle').textContent = 'Add Doctor';
+      document.getElementById('modalContent').innerHTML = `
+        <form id="doctorForm">
+            <div class="form-grid">
+                <div class="field full"><label>Doctor Name *</label><input name="name" required></div>
+                <div class="field"><label>Clinic *</label><select name="clinicId" required>${data.clinics.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('')}</select></div>
+                <div class="field"><label>Qualification</label><input name="qualification" placeholder="BDS, MBBS, etc."></div>
+                <div class="field"><label>Speciality</label><input name="speciality"></div>
+                <div class="field"><label>Email</label><input name="email" type="email"></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary">Save Doctor</button></div>
+        </form>`;
+
+      openModal();
+      document.getElementById('doctorForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target).entries());
+        const clinic = data.clinics.find(c => c.id === f.clinicId);
+        data.doctors.push({ ...f, id: 'DOC-' + Date.now(), clinic: clinic?.name || '' });
+        logAction('Doctor added', 'Doctor Management', f.name);
+        saveData(); closeModal(); renderDoctors(); showToast('Doctor prototype record added');
+      });
+    }
+
+    function deleteDoctor(id) {
+      if (!confirm('Delete this doctor record?')) return;
+      data.doctors = data.doctors.filter(d => d.id !== id);
+      logAction('Doctor deleted', 'Doctor Management', id);
+      saveData(); renderDoctors();
+    }
+
+    /* ADMIN MANAGEMENT */
+
+    function renderAdmins() {
+      document.getElementById('adminTable').innerHTML = data.admins.length ? data.admins.map(a => {
+        const clinic = data.clinics.find(c => c.id === a.clinicId);
+        return `<tr>
+            <td><div class="primary-cell">${escapeHTML(a.name)}</div></td>
+            <td>${escapeHTML(a.email)}</td>
+            <td>${escapeHTML(clinic?.name || 'Unassigned')}</td>
+            <td>${escapeHTML(a.role)}</td>
+            <td><span class="status ${a.status === 'Active' ? 'active' : 'pending'}">${escapeHTML(a.status)}</span></td>
+            <td><button class="table-action" onclick="showToast('Account access management requires backend authentication')"><i data-lucide="settings"></i></button></td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="6"><div class="empty-state">No administrators registered yet.</div></td></tr>`;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openAdminModal() {
+      if (!data.clinics.length) { showToast('Create a clinic first'); return; }
+      document.getElementById('modalTitle').textContent = 'Add Clinic Admin';
+      document.getElementById('modalContent').innerHTML = `
+        <form id="adminForm">
+            <div class="form-grid">
+                <div class="field full"><label>Admin Name *</label><input name="name" required></div>
+                <div class="field full"><label>Email *</label><input name="email" type="email" required></div>
+                <div class="field full"><label>Clinic *</label><select name="clinicId">${data.clinics.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('')}</select></div>
+            </div>
+            <div class="notice" style="margin-top:15px">This creates a local prototype record only. No password or login account is created.</div>
+            <div class="form-actions"><button class="btn btn-primary">Add Admin Record</button></div>
+        </form>`;
+      openModal();
+
+      document.getElementById('adminForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target).entries());
+        data.admins.push({ ...f, id: 'ADM-' + Date.now(), role: 'Clinic Admin', status: 'Pending' });
+        logAction('Admin record created', 'Admin Management', f.email);
+        saveData(); closeModal(); renderAdmins(); showToast('Admin prototype record added');
+      });
+    }
+
+    /* CHATBOTS */
+
+    
+function renderBots() {
+  const botTable = document.getElementById('botTable');
+
+  botTable.innerHTML = data.clinics.length
+    ? data.clinics.map(c => {
+        const botId = 'BOT-' + c.id;
+        const botStatus = c.status === 'Active' ? 'Active' : 'Inactive';
+
+        return `
+          <tr>
+            <td>
+              <div class="primary-cell">${escapeHTML(c.name)}</div>
+              <div class="secondary-cell">Clinic ID: ${escapeHTML(c.id)}</div>
+            </td>
+
+            <td>${escapeHTML(botId)}</td>
+
+            <td>
+              <span class="secondary-cell">URL provisioning pending</span>
+            </td>
+
+            <td>
+              <span class="status ${botStatus === 'Active' ? 'active' : 'inactive'}">
+                ${botStatus}
+              </span>
+            </td>
+
+            <td>
+              <button class="table-action"
+                title="Configure chatbot"
+                onclick="configureBot(${Number(c.id)})">
+                <i data-lucide="settings"></i>
+              </button>
+
+              <button class="table-action"
+                title="Preview chatbot"
+                onclick="showToast('Chatbot preview will be available after URL provisioning')">
+                <i data-lucide="external-link"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('')
+    : `<tr><td colspan="5"><div class="empty-state">Create a clinic to initialise its chatbot record.</div></td></tr>`;
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function configureBot(clinicId) {
+  const clinic = data.clinics.find(
+    c => Number(c.id) === Number(clinicId)
+  );
+
+  if (!clinic) {
+    showToast('Clinic not found.');
+    return;
+  }
+
+  document.getElementById('modalTitle').textContent =
+    'Configure Chatbot — ' + clinic.name;
+
+  document.getElementById('modalContent').innerHTML =
+    '<p>Loading clinic configuration...</p>';
+
+  openModal();
+
+  try {
+    const [settingsResult, chatbotResult] = await Promise.all([
+      apiFetch(`/api/master/clinics/${clinicId}/settings`),
+      apiFetch(`/api/master/clinics/${clinicId}/chatbot-config`)
+    ]);
+
+    const s = settingsResult.settings || {};
+
+    const chatbotData = chatbotResult.config || {};
+    const config = chatbotData.config || {};
+    const isEnabled = chatbotData.is_enabled !== false;
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="form-group">
+        <h4>Clinic Information</h4>
+      </div>
+
+      <div class="form-group">
+        <label>Clinic Name</label>
+        <input id="botClinicName" value="${escapeHTML(s.clinic_name || clinic.name || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Clinic Address</label>
+        <input id="botAddress" value="${escapeHTML(s.address || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Phone</label>
+        <input id="botPhone" value="${escapeHTML(s.phone || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input id="botEmail" value="${escapeHTML(s.email || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Website</label>
+        <input id="botWebsite" value="${escapeHTML(s.website || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Weekday Working Hours</label>
+        <input id="botWeekdayHours" value="${escapeHTML(s.weekday_hours || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Sunday Working Hours</label>
+        <input id="botSundayHours" value="${escapeHTML(s.sunday_hours || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Opening Hour (24-hour format)</label>
+        <input type="number" id="botOpenHour" min="0" max="23"
+          value="${escapeHTML(s.open_hour ?? 9)}">
+      </div>
+
+      <div class="form-group">
+        <label>Closing Hour (24-hour format)</label>
+        <input type="number" id="botCloseHour" min="0" max="23"
+          value="${escapeHTML(s.close_hour ?? 20)}">
+      </div>
+
+      <div class="form-group">
+        <label>Services (one per line)</label>
+        <textarea id="botServices" rows="4">${escapeHTML(
+          Array.isArray(s.services) ? s.services.join('\n') : ''
+        )}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Payment Methods</label>
+        <input id="botPayment" value="${escapeHTML(s.payment || '')}">
+      </div>
+
+      <div class="form-group">
+        <label>Parking Information</label>
+        <input id="botParking" value="${escapeHTML(s.parking || '')}">
+      </div>
+
+      <hr>
+
+      <div class="form-group">
+        <h4>Chatbot Behaviour</h4>
+      </div>
+
+      <div class="form-group">
+        <label>Welcome Message</label>
+        <textarea id="botWelcome" rows="3">${escapeHTML(
+          config.welcome_message || ''
+        )}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Response Tone</label>
+        <select id="botTone">
+          <option value="friendly" ${config.tone === 'friendly' ? 'selected' : ''}>Friendly</option>
+          <option value="professional" ${config.tone === 'professional' ? 'selected' : ''}>Professional</option>
+          <option value="empathetic" ${config.tone === 'empathetic' ? 'selected' : ''}>Empathetic</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Additional AI Instructions</label>
+        <textarea id="botInstructions" rows="5">${escapeHTML(
+          config.instructions || ''
+        )}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="botEnabled" ${isEnabled ? 'checked' : ''}>
+          Enable Chatbot
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveBotConfiguration(${Number(clinicId)})">
+          Save Configuration
+        </button>
+      </div>
+    `;
+
+    if (window.lucide) lucide.createIcons();
+
+  } catch (error) {
+    console.error('Configuration loading failed:', error);
+
+    document.getElementById('modalContent').innerHTML = `
+      <p>Failed to load configuration: ${escapeHTML(error.message)}</p>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    `;
+  }
+}
+
+async function saveBotConfiguration(clinicId) {
+  const settings = {
+    clinic_name: document.getElementById('botClinicName').value.trim(),
+    clinic_type: data.clinics.find(c => Number(c.id) === Number(clinicId))?.type || '',
+    address: document.getElementById('botAddress').value.trim(),
+    phone: document.getElementById('botPhone').value.trim(),
+    email: document.getElementById('botEmail').value.trim(),
+    website: document.getElementById('botWebsite').value.trim(),
+
+    weekday_hours: document.getElementById('botWeekdayHours').value.trim(),
+    sunday_hours: document.getElementById('botSundayHours').value.trim(),
+
+    open_hour: Number(document.getElementById('botOpenHour').value),
+    close_hour: Number(document.getElementById('botCloseHour').value),
+
+    services: document.getElementById('botServices').value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean),
+
+    payment: document.getElementById('botPayment').value.trim(),
+    parking: document.getElementById('botParking').value.trim()
+  };
+
+  const config = {
+    welcome_message: document.getElementById('botWelcome').value.trim(),
+    tone: document.getElementById('botTone').value,
+    instructions: document.getElementById('botInstructions').value.trim()
+  };
+
+  const isEnabled = document.getElementById('botEnabled').checked;
+
+  if (!settings.clinic_name) {
+    showToast('Clinic name is required.');
+    return;
+  }
+
+  if (
+    !Number.isInteger(settings.open_hour) ||
+    !Number.isInteger(settings.close_hour) ||
+    settings.open_hour < 0 ||
+    settings.open_hour > 23 ||
+    settings.close_hour < 0 ||
+    settings.close_hour > 23 ||
+    settings.open_hour >= settings.close_hour
+  ) {
+    showToast('Please enter valid opening and closing hours.');
+    return;
+  }
+
+  try {
+    await apiFetch(`/api/master/clinics/${clinicId}/settings`, {
+      method: 'PUT',
+      body: JSON.stringify({ settings })
+    });
+
+    await apiFetch(`/api/master/clinics/${clinicId}/chatbot-config`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        config,
+        is_enabled: isEnabled
+      })
+    });
+
+    showToast('Chatbot configuration saved successfully.');
+
+    closeModal();
+
+  } catch (error) {
+    console.error('Configuration saving failed:', error);
+    showToast(error.message);
+  }
+}
+
+    /* ACTIVITY LOGS */
+
+    function renderLogs() {
+      document.getElementById('logTable').innerHTML = data.logs.length ? data.logs.map(l => `
+        <tr>
+            <td>${escapeHTML(l.time)}</td>
+            <td>${escapeHTML(l.user)}</td>
+            <td>${escapeHTML(l.action)}</td>
+            <td>${escapeHTML(l.module)}</td>
+            <td>${escapeHTML(l.details)}</td>
+        </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state">No activity recorded yet.</div></td></tr>`;
+    }
+
+    /* MODAL */
+
+    function openModal() {
+      document.getElementById('modalBackdrop').classList.add('show');
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('show');
+    }
+
+    /* SETTINGS */
+
+    document.getElementById('settingsForm').addEventListener('submit', e => {
+      e.preventDefault();
+      showToast('Settings UI saved for this session only. Backend integration pending.');
+    });
+
+    /* INITIALISE */
+
+
+    function logoutMasterAdmin() {
+      sessionStorage.removeItem("bota_master_logged_in");
+      document.getElementById("adminApp").style.display = "none";
+      document.getElementById("loginScreen").style.display = "flex";
+
+      document.getElementById("loginForm").reset();
+      document.getElementById("loginError").style.display = "none";
+    }
+
+
+
+    /* MASTER ADMIN LOGIN - FRONTEND PROTOTYPE */
+
+    const MASTER_ADMIN_USERNAME = "masteradmin";
+    const MASTER_ADMIN_PASSWORD = "BotA@Admin2026!";
+
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("masterUsername").value.trim();
+      const password = document.getElementById("masterPassword").value;
+      const error = document.getElementById("loginError");
+
+      if (
+        username === MASTER_ADMIN_USERNAME &&
+        password === MASTER_ADMIN_PASSWORD
+      ) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminApp").style.display = "flex";
+        error.style.display = "none";
+        sessionStorage.setItem("bota_master_logged_in", "true");
+      } else {
+        error.style.display = "block";
+      }
+    });
+
+    /* RESTORE PROTOTYPE SESSION */
+
+    if (sessionStorage.getItem("bota_master_logged_in") === "true") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("adminApp").style.display = "flex";
+    }
+
+
+    updateDashboard();
+    renderClinics();
+    renderDoctors();
+    renderAdmins();
+    renderBots();
+    renderLogs();
+
+    if (window.lucide) lucide.createIcons();
+  </script>
+
+</body>
+
+</html>

@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ai_handler import get_bota_response
+
 from database import (
     add_appointment,
     get_appointments,
@@ -21,7 +22,34 @@ from database import (
     init_db,
     get_setting,
     set_setting,
+
+    # Master Admin — Clinic Management
+    get_all_clinics,
+    create_clinic,
+    update_clinic_status,
+    get_clinic_by_slug,
+
+    # Multi-clinic configuration
+    get_active_clinic_by_slug,
+    get_clinic_settings,
+    save_clinic_settings,
+    get_chatbot_config,
+    save_chatbot_config,
+
+    # Doctor Management
+    get_doctors_for_clinic,
+    add_doctor_for_clinic,
+    update_doctor_for_clinic,
+    set_doctor_active_for_clinic,
+
+    # Clinic Appointments
+    get_appointments_for_clinic,
+    get_available_slots_for_clinic,
+    add_appointment_for_clinic,
+    cancel_appointment_for_clinic,
+    permanently_delete_appointment_for_clinic,
 )
+
 from config import (
     CLINIC_NAME,
     ADMIN_USERNAME,
@@ -34,6 +62,7 @@ from config import (
 BASE_DIR = Path(__file__).resolve().parent
 INDEX_FILE = BASE_DIR / "index.html"
 ADMIN_FILE = BASE_DIR / "admin.html"
+MASTER_ADMIN_FILE = BASE_DIR / "master_admin.html"
 
 IS_VERCEL = bool(os.getenv("VERCEL"))
 
@@ -167,6 +196,10 @@ def serve_ui():
 @app.get("/admin")
 def serve_admin():
     return FileResponse(ADMIN_FILE)
+
+@app.get("/master-admin")
+def serve_master_admin():
+    return FileResponse(MASTER_ADMIN_FILE)
 
 
 @app.get("/clinic-config")
@@ -374,3 +407,254 @@ def available_slots(date: str):
         "date": date,
         "slots": slots
     }
+
+
+# ============================================================
+# MASTER ADMIN — CLINIC MANAGEMENT API
+# ============================================================
+
+from pydantic import BaseModel
+from typing import Optional
+
+
+class CreateClinicRequest(BaseModel):
+    name: str
+    clinic_type: Optional[str] = ""
+    address: Optional[str] = ""
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
+    website: Optional[str] = ""
+    status: Optional[str] = "active"
+
+
+class UpdateClinicStatusRequest(BaseModel):
+    status: str
+
+
+@app.get("/api/master/clinics")
+def master_get_clinics(request: Request):
+    require_admin(request)
+
+    try:
+        return {
+            "success": True,
+            "clinics": get_all_clinics()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/master/clinics/{clinic_id}/chatbot-config")
+def master_get_chatbot_config(clinic_id: int, request: Request):
+    require_admin(request)
+
+    try:
+        clinic = next(
+            (c for c in get_all_clinics() if int(c["id"]) == clinic_id),
+            None
+        )
+
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found.")
+
+        return {
+            "success": True,
+            "config": get_chatbot_config(clinic_id)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/master/clinics/{clinic_id}/chatbot-config")
+def master_update_chatbot_config(
+    clinic_id: int,
+    request: Request,
+    payload: dict
+):
+    require_admin(request)
+
+    try:
+        clinic = next(
+            (c for c in get_all_clinics() if int(c["id"]) == clinic_id),
+            None
+        )
+
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found.")
+
+        config = payload.get("config", {})
+        is_enabled = payload.get("is_enabled", True)
+
+        if not isinstance(config, dict):
+            raise HTTPException(
+                status_code=400,
+                detail="Chatbot configuration must be an object."
+            )
+
+        if not isinstance(is_enabled, bool):
+            raise HTTPException(
+                status_code=400,
+                detail="is_enabled must be true or false."
+            )
+
+        save_chatbot_config(
+            clinic_id,
+            config,
+            is_enabled=is_enabled
+        )
+
+        return {
+            "success": True,
+            "message": "Chatbot configuration saved successfully.",
+            "config": get_chatbot_config(clinic_id)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/master/clinics/{clinic_id}/settings")
+def master_get_clinic_settings(clinic_id: int, request: Request):
+    require_admin(request)
+
+    try:
+        clinic = next(
+            (c for c in get_all_clinics() if int(c["id"]) == clinic_id),
+            None
+        )
+
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found.")
+
+        return {
+            "success": True,
+            "settings": get_clinic_settings(clinic_id)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/master/clinics/{clinic_id}/settings")
+def master_update_clinic_settings(
+    clinic_id: int,
+    request: Request,
+    payload: dict
+):
+    require_admin(request)
+
+    try:
+        clinic = next(
+            (c for c in get_all_clinics() if int(c["id"]) == clinic_id),
+            None
+        )
+
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found.")
+
+        settings = payload.get("settings", {})
+
+        if not isinstance(settings, dict):
+            raise HTTPException(
+                status_code=400,
+                detail="Clinic settings must be an object."
+            )
+
+        save_clinic_settings(clinic_id, settings)
+
+        return {
+            "success": True,
+            "message": "Clinic settings saved successfully.",
+            "settings": get_clinic_settings(clinic_id)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.post("/api/master/clinics")
+def master_create_clinic(data: CreateClinicRequest, request: Request):
+    require_admin(request)
+
+    try:
+        clinic = create_clinic(
+            name=data.name,
+            clinic_type=data.clinic_type,
+            address=data.address,
+            phone=data.phone,
+            email=data.email,
+            website=data.website,
+            status=data.status
+        )
+
+        return {
+            "success": True,
+            "message": "Clinic created successfully.",
+            "clinic": clinic
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/api/master/clinics/{clinic_id}/status")
+def master_update_clinic_status(
+    clinic_id: int,
+    data: UpdateClinicStatusRequest,
+    request: Request
+):
+    require_admin(request)
+
+    try:
+        clinic = update_clinic_status(clinic_id, data.status)
+
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found.")
+
+        return {
+            "success": True,
+            "message": "Clinic status updated.",
+            "clinic": clinic
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/clinics/{slug}")
+def public_get_clinic(slug: str):
+    try:
+        clinic = get_clinic_by_slug(slug)
+
+        if not clinic or clinic.get("status") != "active":
+            raise HTTPException(status_code=404, detail="Clinic not found or inactive.")
+
+        return {
+            "success": True,
+            "clinic": clinic
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
